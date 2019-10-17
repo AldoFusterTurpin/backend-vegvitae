@@ -1,0 +1,6 @@
+Executar sense problemes
+
+Maven menu (part dreta IntellIj):
+1 - clean
+2 - compile
+3 - Run MainApplication

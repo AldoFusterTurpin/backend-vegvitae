@@ -31,9 +31,9 @@ class User {
   User() {
   }
 
-  public User(String name, String password, String personalDescription,
+  public User(String username, String password, String personalDescription,
       List<String> socialMediaLinks) {
-    this.name = name;
+    this.username = username;
     this.password = password;
     this.personalDescription = personalDescription;
     this.socialMediaLinks = socialMediaLinks;
@@ -55,12 +55,12 @@ class User {
     this.personalDescription = personalDescription;
   }
 
-  public String getName() {
-    return name;
+  public String getUsername() {
+    return username;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setUsername(String username) {
+    this.username = username;
   }
 
   public String getPassword() {

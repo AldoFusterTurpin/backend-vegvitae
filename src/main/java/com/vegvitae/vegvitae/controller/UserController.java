@@ -41,6 +41,7 @@ class UserController {
         linkTo(methodOn(UserController.class).getAllUsers()).withSelfRel());
   }
 
+  @PostMapping
   User newUser(@Valid @RequestBody User createNewUser) {
     createNewUser.setPassword(
         Hashing.sha256().hashString(createNewUser.getPassword(), StandardCharsets.UTF_8)
@@ -53,7 +54,7 @@ class UserController {
     List<User> allUsers = userRepository.findAll();
     String password = userData.get("password");
     User loginUser = StreamSupport
-        .stream(allUsers.spliterator(), false).filter(u -> u.getName()
+        .stream(allUsers.spliterator(), false).filter(u -> u.getUsername()
             .equals(userData.get("username"))).findFirst()
         .orElseThrow(() -> new UserNotFoundException(null));
     if (!loginUser.getPassword()
@@ -78,7 +79,7 @@ class UserController {
 
     return userRepository.findById(id)
         .map(user -> {
-          user.setName(newUser.getName());
+          user.setUsername(newUser.getUsername());
           user.setPassword(
               Hashing.sha256().hashString(newUser.getPassword(), StandardCharsets.UTF_8)
                   .toString());

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "610a5c3c-14f7-49f2-8ac5-680515c1cf8f",
+		"_postman_id": "8f424673-9403-4ebc-b99f-2c9db6c0f657",
 		"name": "vegvitae-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,12 +11,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8080/users",
+					"raw": "localhost:8080/api/users",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
+						"api",
 						"users"
 					]
 				}
@@ -29,12 +30,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8080/users/1",
+					"raw": "localhost:8080/api/users/1",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
+						"api",
 						"users",
 						"1"
 					]
@@ -56,15 +58,16 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"name\": \"Anacleto Anacletus\", \n\t\"password\": \"secret_password\"\n}"
+					"raw": "{\n\t\"username\": \"Anacleto Anacletus22\", \n\t\"password\": \"secret_password\",\n\t\"email\" : \"arrobapolicia@hotmail.com\"\n}"
 				},
 				"url": {
-					"raw": "localhost:8080/users",
+					"raw": "localhost:8080/api/users",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
+						"api",
 						"users"
 					]
 				}
@@ -85,15 +88,16 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"name\": \"Anacleto Anacletus\",\n    \"password\": \"new_secret_password\"\n}"
+					"raw": "{\n    \"username\": \"Anacleto Anacletus\",\n    \"password\": \"new_secret_password\",\n    \"email\" : \"newmail@mail.com\"\n}"
 				},
 				"url": {
-					"raw": "localhost:8080/users/3?Content-type=application/json",
+					"raw": "localhost:8080/api/users/3?Content-type=application/json",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
+						"api",
 						"users",
 						"3"
 					],
@@ -124,18 +128,20 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "localhost:8080/users/3",
+					"raw": "localhost:8080/api/users/2",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
+						"api",
 						"users",
-						"3"
+						"2"
 					]
 				}
 			},
 			"response": []
 		}
-	]
+	],
+	"protocolProfileBehavior": {}
 }

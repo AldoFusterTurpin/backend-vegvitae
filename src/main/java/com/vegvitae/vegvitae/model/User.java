@@ -9,59 +9,63 @@ import java.util.List;
 public
 class User {
 
-	private @Id @GeneratedValue Long id;
-	private String name;
-	private String password;
-	private String personalDescription;
+  private @Id
+  @GeneratedValue
+  Long id;
+  private String name;
+  private String password;
+  private String personalDescription;
 
-	@ElementCollection
-	private List<String> socialMediaLinks;
+  @ElementCollection
+  private List<String> socialMediaLinks;
 
-	User() {}
+  User() {
+  }
 
-	public User(String name, String password, String personalDescription, List<String> socialMediaLinks) {
-		this.name = name;
-		this.password = password;
-		this.personalDescription = personalDescription;
-	}
+  public User(String name, String password, String personalDescription,
+      List<String> socialMediaLinks) {
+    this.name = name;
+    this.password = password;
+    this.personalDescription = personalDescription;
+  }
 
-	public Long getId() {
-		return id;
-	}
+  public Long getId() {
+    return id;
+  }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-	public String getPersonalDescription() {
-		return personalDescription;
-	}
+  public String getPersonalDescription() {
+    return personalDescription;
+  }
 
-	public void setPersonalDescription(String personalDescription) {
-		this.personalDescription = personalDescription;
-	}
+  public void setPersonalDescription(String personalDescription) {
+    this.personalDescription = personalDescription;
+  }
 
-	public String getName() {
-		return name;
-	}
+  public String getName() {
+    return name;
+  }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  public void setName(String name) {
+    this.name = name;
+  }
 
-	public String getPassword() {
-		return password;
-	}
+  public String getPassword() {
+    return password;
+  }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+  public void setPassword(String password) {
+    this.password = password;
+  }
 
-	public List<String> getSocialMediaLinks() {
-		return socialMediaLinks;
-	}
+  public List<String> getSocialMediaLinks() {
+    return socialMediaLinks;
+  }
 
-	public void setSocialMediaLinks(List<String> socialMediaLinks) {
-		this.socialMediaLinks = socialMediaLinks;
-	}
+  public void setSocialMediaLinks(List<String> socialMediaLinks) {
+    this.socialMediaLinks = socialMediaLinks;
+  }
 }

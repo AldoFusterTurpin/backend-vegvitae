@@ -10,7 +10,7 @@ public
 class User {
 
   private @Id
-  @GeneratedValue
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long id;
   private String name;
   private String password;
@@ -27,6 +27,7 @@ class User {
     this.name = name;
     this.password = password;
     this.personalDescription = personalDescription;
+    this.socialMediaLinks = socialMediaLinks;
   }
 
   public Long getId() {

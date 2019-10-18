@@ -1,16 +1,13 @@
 package com.vegvitae.vegvitae.controller;
 
-
 import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.exceptions.UserNotFoundException;
 import com.vegvitae.vegvitae.repository.UserRepository;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
-
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 

@@ -2,6 +2,7 @@ package com.vegvitae.vegvitae.model;
 
 import javax.persistence.*;
 import java.util.List;
+import javax.validation.constraints.NotBlank;
 
 
 @Entity
@@ -9,11 +10,19 @@ import java.util.List;
 public
 class User {
 
-  private @Id
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  Long id;
-  private String name;
+  private Long id;
+
+  @NotBlank
+  private String username;
+
+  @NotBlank
   private String password;
+
+  @NotBlank
+  private String email;
+
   private String personalDescription;
 
   @ElementCollection
@@ -22,9 +31,9 @@ class User {
   User() {
   }
 
-  public User(String name, String password, String personalDescription,
+  public User(String username, String password, String personalDescription,
       List<String> socialMediaLinks) {
-    this.name = name;
+    this.username = username;
     this.password = password;
     this.personalDescription = personalDescription;
     this.socialMediaLinks = socialMediaLinks;
@@ -46,12 +55,12 @@ class User {
     this.personalDescription = personalDescription;
   }
 
-  public String getName() {
-    return name;
+  public String getUsername() {
+    return username;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setUsername(String username) {
+    this.username = username;
   }
 
   public String getPassword() {
@@ -69,4 +78,14 @@ class User {
   public void setSocialMediaLinks(List<String> socialMediaLinks) {
     this.socialMediaLinks = socialMediaLinks;
   }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
 }
+

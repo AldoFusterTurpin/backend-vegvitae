@@ -2,6 +2,7 @@ target
 .idea
 .DS_STORE
 vegvitae.iml
+rest.iml
 
 # Compiled class file
 *.class

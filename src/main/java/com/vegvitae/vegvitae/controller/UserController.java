@@ -77,7 +77,7 @@ class UserController {
   Resource<User> getUserById(@PathVariable Long id) {
 
     User user = userRepository.findById(id)
-        .orElseThrow(() -> new UserNotFoundException(id));
+        .orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND, "Cannot find user with id" + id));
     return new Resource<>(user,
         linkTo(methodOn(UserController.class).getUserById(id)).withSelfRel(),
         linkTo(methodOn(UserController.class).getAllUsers()).withRel("users"));

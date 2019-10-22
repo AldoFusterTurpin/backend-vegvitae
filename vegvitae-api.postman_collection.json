@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "8f424673-9403-4ebc-b99f-2c9db6c0f657",
+		"_postman_id": "6dc4a080-fdbc-4a42-8549-e27477423849",
 		"name": "vegvitae-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -139,6 +139,44 @@
 						"2"
 					]
 				}
+			},
+			"response": []
+		},
+		{
+			"name": "LOGIN",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\" : \"1234\",\n\t\"password\" : \"1234pass\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/users/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"users",
+						"login"
+					]
+				},
+				"description": "This request makes a login"
 			},
 			"response": []
 		}

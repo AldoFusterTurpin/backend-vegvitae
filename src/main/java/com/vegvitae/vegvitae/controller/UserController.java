@@ -1,5 +1,6 @@
 package com.vegvitae.vegvitae.controller;
 
+import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.exceptions.UserNotFoundException;
 import com.vegvitae.vegvitae.repository.UserRepository;
@@ -10,10 +11,12 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.google.common.hash.Hashing;
+import org.springframework.web.server.ResponseStatusException;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -51,15 +54,21 @@ class UserController {
 
   @PostMapping("/login")
   User login(@RequestBody Map<String, String> userData) {
+    if (!userData.containsKey("username") || userData.get("username").length() <= 0) {
+      throw new GenericException(HttpStatus.BAD_REQUEST, "Username cannot be null nor empty");
+    }
+    if (!userData.containsKey("password") || userData.get("password").length() <= 0) {
+      throw new GenericException(HttpStatus.BAD_REQUEST, "Password cannot be null nor empty");
+    }
     List<User> allUsers = userRepository.findAll();
     String password = userData.get("password");
     User loginUser = StreamSupport
         .stream(allUsers.spliterator(), false).filter(u -> u.getUsername()
             .equals(userData.get("username"))).findFirst()
-        .orElseThrow(() -> new UserNotFoundException(null));
+        .orElseThrow(() -> new GenericException(HttpStatus.FORBIDDEN, "User does not exist"));
     if (!loginUser.getPassword()
         .equals(Hashing.sha256().hashString(password, StandardCharsets.UTF_8).toString())) {
-      //Exception
+      throw new GenericException(HttpStatus.FORBIDDEN, "Credentials are not correct. Try again");
     }
     return loginUser;
   }

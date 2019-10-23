@@ -43,11 +43,13 @@ class UserController {
   }
 
   @PostMapping
-  User newUser(@Valid @RequestBody User createNewUser) {
+  Resource<User> newUser(@Valid @RequestBody User createNewUser) {
     createNewUser.setPassword(
         Hashing.sha256().hashString(createNewUser.getPassword(), StandardCharsets.UTF_8)
             .toString());
-    return userRepository.save(createNewUser);
+    User user = userRepository.save(createNewUser);
+    return new Resource<User>(user,
+        linkTo(methodOn(UserController.class).getUserById(user.getId())).withSelfRel());
   }
 
   @PostMapping("/login")
@@ -82,9 +84,8 @@ class UserController {
   }
 
   @PutMapping("{id}")
-  User replaceUserById(@Valid @RequestBody User newUser, @PathVariable Long id) {
-
-    return userRepository.findById(id)
+  Resource<User> editUser(@Valid @RequestBody User newUser, @PathVariable Long id) {
+    User u = userRepository.findById(id)
         .map(user -> {
           user.setUsername(newUser.getUsername());
           user.setPassword(
@@ -95,6 +96,8 @@ class UserController {
           user.setSocialMediaLinks(newUser.getSocialMediaLinks());
           return userRepository.save(user);
         }).get();
+    return new Resource<User>(u,
+        linkTo(methodOn(UserController.class).getUserById(u.getId())).withSelfRel());
   }
 
   @DeleteMapping("{id}")

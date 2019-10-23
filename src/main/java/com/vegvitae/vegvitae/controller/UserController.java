@@ -2,7 +2,6 @@ package com.vegvitae.vegvitae.controller;
 
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.User;
-import com.vegvitae.vegvitae.exceptions.UserNotFoundException;
 import com.vegvitae.vegvitae.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.google.common.hash.Hashing;
-import org.springframework.web.server.ResponseStatusException;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;

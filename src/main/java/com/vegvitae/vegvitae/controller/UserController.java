@@ -1,5 +1,6 @@
 package com.vegvitae.vegvitae.controller;
 
+import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.repository.UserRepository;
@@ -42,26 +43,29 @@ class UserController {
   }
 
   @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
   Resource<User> newUser(@Valid @RequestBody User createNewUser) {
     if (userRepository.findByUsername(createNewUser.getUsername()) != null) {
-      throw new GenericException(HttpStatus.BAD_REQUEST, "This username is already used");
+      throw new GenericException(HttpStatus.BAD_REQUEST,
+          ExceptionMessages.USERNAME_IN_USE.getErrorMessage());
     }
     if (userRepository.findByEmail(createNewUser.getEmail()) != null) {
-      throw new GenericException(HttpStatus.BAD_REQUEST, "This email adress is already used");
+      throw new GenericException(HttpStatus.BAD_REQUEST,
+          ExceptionMessages.EMAIL_IN_USE.getErrorMessage());
     }
     if (!isValidPassword(createNewUser.getPassword())) {
       throw new GenericException(HttpStatus.BAD_REQUEST,
-          "The password must have a minimum of 7 characters and should showcase upper case, lower case and number");
+          ExceptionMessages.INVALID_PASSWORD.getErrorMessage());
     }
     if (createNewUser.getSocialMediaLinks() != null
         && createNewUser.getSocialMediaLinks().size() > 4) {
       throw new GenericException(HttpStatus.BAD_REQUEST,
-          "Too many Social Media Links, maximum 4 links");
+          ExceptionMessages.INVALID_SOCIAL_MEDIA_LINKS_LENGTH.getErrorMessage());
     }
     if (createNewUser.getPersonalDescription() != null
         && createNewUser.getPersonalDescription().length() > 160) {
       throw new GenericException(HttpStatus.BAD_REQUEST,
-          "The personal description must be shorter than 160 characters");
+          ExceptionMessages.INVALID_DESCRIPTION.getErrorMessage());
     }
 
     createNewUser.setPassword(
@@ -75,19 +79,23 @@ class UserController {
   @PostMapping("/login")
   Resource<User> login(@RequestBody Map<String, String> userData) {
     if (!userData.containsKey("username") || userData.get("username").length() <= 0) {
-      throw new GenericException(HttpStatus.BAD_REQUEST, "Username cannot be null nor empty");
+      throw new GenericException(HttpStatus.BAD_REQUEST,
+          ExceptionMessages.NULL_USERNAME.getErrorMessage());
     }
     if (!userData.containsKey("password") || userData.get("password").length() <= 0) {
-      throw new GenericException(HttpStatus.BAD_REQUEST, "Password cannot be null nor empty");
+      throw new GenericException(HttpStatus.BAD_REQUEST,
+          ExceptionMessages.NULL_PASSWORD.getErrorMessage());
     }
     User loginUser = userRepository.findByUsername(userData.get("username"));
     if (loginUser == null) {
-      throw new GenericException(HttpStatus.FORBIDDEN, "Credentials are not correct. Try again");
+      throw new GenericException(HttpStatus.FORBIDDEN,
+          ExceptionMessages.INVALID_CREDENTIALS.getErrorMessage());
     }
 
     if (!loginUser.getPassword().equals(
         Hashing.sha256().hashString(userData.get("password"), StandardCharsets.UTF_8).toString())) {
-      throw new GenericException(HttpStatus.FORBIDDEN, "Credentials are not correct. Try again");
+      throw new GenericException(HttpStatus.FORBIDDEN,
+          ExceptionMessages.INVALID_CREDENTIALS.getErrorMessage());
     }
     return new Resource<>(loginUser,
         linkTo(methodOn(UserController.class).getUserById(loginUser.getId())).withSelfRel());
@@ -111,23 +119,25 @@ class UserController {
         .map(user -> {
           if (!newUser.getUsername().equals(user.getUsername())
               && userRepository.findByUsername(newUser.getUsername()) != null) {
-            throw new GenericException(HttpStatus.BAD_REQUEST, "This username is already used");
+            throw new GenericException(HttpStatus.BAD_REQUEST,
+                ExceptionMessages.USERNAME_IN_USE.getErrorMessage());
           }
           if (!isValidPassword(newUser.getPassword())) {
             throw new GenericException(HttpStatus.BAD_REQUEST,
-                "The password must have a minimum of 7 characters and should showcase upper case, lower case and number");
+                ExceptionMessages.INVALID_PASSWORD.getErrorMessage());
           }
           if (!newUser.getEmail().equals(user.getEmail())
               && userRepository.findByEmail(newUser.getEmail()) != null) {
-            throw new GenericException(HttpStatus.BAD_REQUEST, "This email is already used");
+            throw new GenericException(HttpStatus.BAD_REQUEST,
+                ExceptionMessages.EMAIL_IN_USE.getErrorMessage());
           }
           if (newUser.getSocialMediaLinks().size() > 4) {
             throw new GenericException(HttpStatus.BAD_REQUEST,
-                "Too many Social Media Links, maximum 4 links");
+                ExceptionMessages.INVALID_SOCIAL_MEDIA_LINKS_LENGTH.getErrorMessage());
           }
           if (newUser.getPersonalDescription().length() > 160) {
             throw new GenericException(HttpStatus.BAD_REQUEST,
-                "The personal description must be shorter than 160 characters");
+                ExceptionMessages.INVALID_DESCRIPTION.getErrorMessage());
           }
           user.setEmail(newUser.getEmail());
           user.setUsername(newUser.getUsername());

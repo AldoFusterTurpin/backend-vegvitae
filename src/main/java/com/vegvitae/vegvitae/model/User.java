@@ -28,21 +28,20 @@ public class User {
   @NotBlank
   private String email;
 
-  @Length(max = 5, message = "The field must be shorter than 160 characters")
   private String personalDescription;
 
   @ElementCollection
-  @Size(max = 4, message = "Maximum 4 social media links")
   private List<String> socialMediaLinks = new ArrayList<String>(
       4); //por que solo pueden haber 4 links
 
   User() {
   }
 
-  public User(String username, String password, String personalDescription,
+  public User(String username, String password, String email, String personalDescription,
       List<String> socialMediaLinks) {
     this.username = username;
     this.password = password;
+    this.email = email;
     this.personalDescription = personalDescription;
     this.socialMediaLinks = socialMediaLinks;
   }

@@ -1,12 +1,18 @@
 package com.vegvitae.vegvitae.model;
 
+import java.util.ArrayList;
 import javax.persistence.*;
 import java.util.List;
 import javax.validation.constraints.NotBlank;
-
+import javax.validation.constraints.Size;
+import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"id", "username", "email"})}
+)
 public class User {
 
   @Id
@@ -22,10 +28,13 @@ public class User {
   @NotBlank
   private String email;
 
+  @Length(max = 5, message = "The field must be shorter than 160 characters")
   private String personalDescription;
 
   @ElementCollection
-  private List<String> socialMediaLinks;
+  @Size(max = 4, message = "Maximum 4 social media links")
+  private List<String> socialMediaLinks = new ArrayList<String>(
+      4); //por que solo pueden haber 4 links
 
   User() {
   }

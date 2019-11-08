@@ -4,6 +4,7 @@ import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.repository.UserRepository;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import javax.validation.Valid;
@@ -11,10 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.google.common.hash.Hashing;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -33,9 +36,15 @@ class UserController {
   Resources<Resource<User>> getAllUsers() {
 
     List<Resource<User>> users = userRepository.findAll().stream()
-        .map(user -> new Resource<>(user,
-            linkTo(methodOn(UserController.class).getUserById(user.getId())).withSelfRel(),
-            linkTo(methodOn(UserController.class).getAllUsers()).withRel("users")))
+        .map(user -> {
+          Resource<User> resource = new Resource<>(user,
+              linkTo(methodOn(UserController.class).getUserById(user.getId())).withSelfRel(),
+              linkTo(methodOn(UserController.class).getAllUsers()).withRel("users"));
+           if(user.getImage() != null) {
+             resource.add(linkTo(methodOn(UserController.class).getUserImage(user.getId())).withRel("image"));
+           }
+           return resource;
+        })
         .collect(Collectors.toList());
 
     return new Resources<>(users,
@@ -97,8 +106,12 @@ class UserController {
       throw new GenericException(HttpStatus.FORBIDDEN,
           ExceptionMessages.INVALID_CREDENTIALS.getErrorMessage());
     }
-    return new Resource<>(loginUser,
+    Resource<User> resource =  new Resource<>(loginUser,
         linkTo(methodOn(UserController.class).getUserById(loginUser.getId())).withSelfRel());
+    if(loginUser.getImage() != null) {
+      resource.add(linkTo(methodOn(UserController.class).getUserImage(loginUser.getId())).withRel("image"));
+    }
+    return resource;
   }
 
 
@@ -107,10 +120,34 @@ class UserController {
 
     User user = userRepository.findById(id)
         .orElseThrow(
-            () -> new GenericException(HttpStatus.NOT_FOUND, "Cannot find user with id" + id));
-    return new Resource<>(user,
+            () -> new GenericException(HttpStatus.NOT_FOUND, "Cannot find user with id " + id));
+    Resource<User> resource =  new Resource<>(user,
         linkTo(methodOn(UserController.class).getUserById(id)).withSelfRel(),
         linkTo(methodOn(UserController.class).getAllUsers()).withRel("users"));
+    if(user.getImage() != null) {
+      resource.add(
+          linkTo(methodOn(UserController.class).getUserImage(user.getId())).withRel("image"));
+    }
+    return resource;
+  }
+
+  @PutMapping("{id}/image")
+  void uploadUserImage(@PathVariable Long id,
+      @RequestParam("image") MultipartFile image) throws IOException {
+    User user = userRepository.findById(id)
+        .orElseThrow(() -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the user"));
+    user.setImage(image.getBytes());
+    userRepository.save(user);
+  }
+
+  @GetMapping("{id}/image")
+  ResponseEntity<byte[]> getUserImage(@PathVariable Long id) {
+    User user = userRepository.findById(id)
+        .orElseThrow(() -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the user"));
+    if(user.getImage() != null) {
+      return new ResponseEntity<>(user.getImage(), HttpStatus.OK);
+    }
+    else throw new GenericException(HttpStatus.BAD_REQUEST, "User has no image");
   }
 
   @PutMapping("{id}")
@@ -148,8 +185,12 @@ class UserController {
           user.setSocialMediaLinks(newUser.getSocialMediaLinks());
           return userRepository.save(user);
         }).get();
-    return new Resource<>(replacedUser,
+    Resource resource = new Resource<>(replacedUser,
         linkTo(methodOn(UserController.class).getUserById(replacedUser.getId())).withSelfRel());
+    if(replacedUser.getImage() != null) {
+      resource.add(linkTo(methodOn(UserController.class).getUserImage(replacedUser.getId())).withRel("image"));
+    }
+    return resource;
   }
 
   @DeleteMapping("{id}")

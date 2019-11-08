@@ -1,5 +1,6 @@
 package com.vegvitae.vegvitae.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.Set;
 import javax.persistence.*;
@@ -38,8 +39,13 @@ public class User {
   @OneToMany(mappedBy = "uploader")
   private Set<Product> uploadedProducts;
 
-  public User() {
+  @JsonIgnore
+  @Lob
+  private byte[] image;
+
+  User() {
   }
+
 
   public User(String username, String password, String email, String personalDescription,
       List<String> socialMediaLinks) {
@@ -98,5 +104,12 @@ public class User {
     this.email = email;
   }
 
+  public byte[] getImage() {
+    return image;
+  }
+
+  public void setImage(byte[] image) {
+    this.image = image;
+  }
 }
 

@@ -1,6 +1,7 @@
 package com.vegvitae.vegvitae.model;
 
 import java.util.ArrayList;
+import java.util.Set;
 import javax.persistence.*;
 import java.util.List;
 import javax.validation.constraints.NotBlank;
@@ -34,8 +35,9 @@ public class User {
   private List<String> socialMediaLinks = new ArrayList<String>(
       4); //por que solo pueden haber 4 links
 
-  User() {
-  }
+  @OneToMany(mappedBy = "uploader")
+  private Set<Product> uploadedProducts;
+
 
   public User(String username, String password, String email, String personalDescription,
       List<String> socialMediaLinks) {

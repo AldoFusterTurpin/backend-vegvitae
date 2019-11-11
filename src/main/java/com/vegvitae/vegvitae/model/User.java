@@ -38,6 +38,8 @@ public class User {
   @OneToMany(mappedBy = "uploader")
   private Set<Product> uploadedProducts;
 
+  public User() {
+  }
 
   public User(String username, String password, String email, String personalDescription,
       List<String> socialMediaLinks) {

@@ -5,5 +5,8 @@ public enum SupermarketEnum {
   CAPRABO,
   ALDI,
   LIDL,
+  MERCADONA,
+  CARREFOUR,
+  CONSUM,
   OTHERS
 }

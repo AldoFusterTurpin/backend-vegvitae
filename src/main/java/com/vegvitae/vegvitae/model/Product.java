@@ -15,9 +15,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 @Entity
-@Table(
-    name = "products"
-)
+@Table(name = "products")
 public class Product {
 
   @Id
@@ -49,15 +47,7 @@ public class Product {
 
   private int numberOfRatings;
 
-  {
-    numberOfRatings = 0;
-  }
-
   private double totalRatings;
-
-  {
-    totalRatings = 0;
-  }
 
   @ManyToOne
   @JoinColumn(name = "uploader_id")
@@ -73,8 +63,7 @@ public class Product {
   public Product(long barcode, String name, ProductBaseTypeEnum baseType,
       Set<ProductAdditionalTypeEnum> additionalTypes,
       Set<SupermarketEnum> supermarketsAvailable, String shop, User uploader,
-      String uploaderComment, Long price,
-      int numberOfRatings, Date creationDate, double rating) {
+      String uploaderComment, Long price, Date creationDate) {
     this.barcode = barcode;
     this.name = name;
     this.baseType = baseType;
@@ -85,19 +74,8 @@ public class Product {
     this.uploaderComment = uploaderComment;
     this.price = price;
     this.creationDate = creationDate;
-    this.numberOfRatings = numberOfRatings;
-
-    if (this.numberOfRatings > 0) {
-      ++this.numberOfRatings;
-      this.rating = (this.totalRatings + rating) / this.numberOfRatings;
-      this.totalRatings += rating;
-    } else {
-      if (rating >= 0) {
-        this.rating = rating;
-        this.totalRatings = rating;
-        this.numberOfRatings = 1;
-      }
-    }
+    this.numberOfRatings = 0;
+    this.totalRatings = 0;
   }
 
   public long getBarcode() {
@@ -130,6 +108,14 @@ public class Product {
 
   public void setNumberOfRatings(int numberOfRatings) {
     this.numberOfRatings = numberOfRatings;
+  }
+
+  public double getTotalRatings() {
+    return totalRatings;
+  }
+
+  public void setTotalRatings(double totalRatings) {
+    this.totalRatings = totalRatings;
   }
 
   public Date getCreationDate() {

@@ -13,6 +13,7 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Entity
@@ -25,7 +26,7 @@ public class Product {
   @NotBlank(message = "Product name can't be blank.")
   private String name;
 
-  @NotBlank(message = "Product base type can't be blank.")
+  @NotNull(message = "Product base type can't be blank.")
   private ProductBaseTypeEnum baseType;
 
   @ElementCollection
@@ -52,7 +53,7 @@ public class Product {
 
   @ManyToOne
   @JoinColumn(name = "uploader_id")
-  @NotBlank(message = "Uploader id can't be blank.")
+  @NotNull(message = "Uploader can't be NULL.")
   private User uploader;
 
   @Size(max = 160, message = "The uploader comment has to be smaller than {max} characters.")

@@ -23,14 +23,19 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
+import com.vegvitae.vegvitae.model.User;
+import com.vegvitae.vegvitae.model.newProductDTO;
+import com.vegvitae.vegvitae.repository.UserRepository;
+import javax.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import javax.validation.Valid;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -42,10 +47,31 @@ public class ProductController {
   @Autowired
   private ProductRepository productRepository;
 
+  @Autowired
+  private UserRepository userRepository;
+
   @PostMapping
-  public ResponseEntity createProduct(@Valid @RequestBody Product product) {
-    productRepository.save(product);
-    return ResponseEntity.status(201).body("Product created successfully.");
+  @ResponseBody
+  @ResponseStatus(HttpStatus.CREATED)
+  public Product newProduct(@Valid @RequestBody newProductDTO productDTO) {
+    if (productRepository.existsById(productDTO.getBarcode())) {
+      throw new GenericException(HttpStatus.BAD_REQUEST,
+          ExceptionMessages.PRODUCT_EXISTS.getErrorMessage());
+    }
+
+    User uploader = userRepository.getOne(productDTO.getUploaderId());
+    Product product = new Product();
+    product.setBarcode(productDTO.getBarcode());
+    product.setName(productDTO.getName());
+    product.setBaseType(productDTO.getBaseType());
+    product.setAdditionalTypes(productDTO.getAdditionalTypes());
+    product.setSupermarketsAvailable(productDTO.getSupermarketsAvailable());
+    product.setShop(productDTO.getShop());
+    product.setUploader(uploader);
+    product.setUploaderComment(productDTO.getUploaderComment());
+
+    productRepository.saveAndFlush(product);
+    return product;
   }
 
   @GetMapping

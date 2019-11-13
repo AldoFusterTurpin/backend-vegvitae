@@ -51,7 +51,6 @@ public class User {
   User() {
   }
 
-
   public User(String username, String password, String email, String personalDescription,
       List<String> socialMediaLinks) {
     this.username = username;

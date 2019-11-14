@@ -1,25 +1,6 @@
 package com.vegvitae.vegvitae.controller;
 
-import static com.vegvitae.vegvitae.model.OrderTypeEnum.DATE_ASC;
-import static com.vegvitae.vegvitae.model.OrderTypeEnum.DATE_DESC;
-import static com.vegvitae.vegvitae.model.OrderTypeEnum.HIGH_RATE;
-import static com.vegvitae.vegvitae.model.OrderTypeEnum.LOW_RATE;
-import static com.vegvitae.vegvitae.model.OrderTypeEnum.TODAY;
-import static com.vegvitae.vegvitae.model.ProductAdditionalTypeEnum.ECOLOGIC;
-import static com.vegvitae.vegvitae.model.ProductAdditionalTypeEnum.FAIR_TRADE;
-import static com.vegvitae.vegvitae.model.ProductAdditionalTypeEnum.PROXIMITY;
-import static com.vegvitae.vegvitae.model.ProductAdditionalTypeEnum.SPORTS_SUPPLEMENT;
-import static com.vegvitae.vegvitae.model.ProductBaseTypeEnum.NOT_VEGGIE;
-import static com.vegvitae.vegvitae.model.ProductBaseTypeEnum.VEGAN;
-import static com.vegvitae.vegvitae.model.ProductBaseTypeEnum.VEGETARIAN;
-import static com.vegvitae.vegvitae.model.SupermarketEnum.ALDI;
-import static com.vegvitae.vegvitae.model.SupermarketEnum.BON_PREU;
-import static com.vegvitae.vegvitae.model.SupermarketEnum.CAPRABO;
-import static com.vegvitae.vegvitae.model.SupermarketEnum.CARREFOUR;
-import static com.vegvitae.vegvitae.model.SupermarketEnum.CONSUM;
-import static com.vegvitae.vegvitae.model.SupermarketEnum.LIDL;
-import static com.vegvitae.vegvitae.model.SupermarketEnum.MERCADONA;
-import static com.vegvitae.vegvitae.model.SupermarketEnum.OTHERS;
+import static com.vegvitae.vegvitae.model.OrderTypeEnum.*;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
@@ -41,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -106,7 +88,9 @@ public class ProductController {
 
     Product product = productRepository.findById(id)
         .orElseThrow(
-            () -> new GenericException(HttpStatus.NOT_FOUND, "Cannot find user with id" + id));
+            () -> new GenericException(HttpStatus.NOT_FOUND,
+                "Cannot find product with barcode " + id));
+
     return getAllLinksResourceWithAllLinks(product);
 
   }
@@ -114,8 +98,8 @@ public class ProductController {
   @GetMapping("/search")
   Resources<Resource<Product>> getProductsByTags(
       @RequestParam(name = "base", required = false) List<ProductBaseTypeEnum> baseTags,
-      @RequestParam(name = "aditional", required = false) List<ProductAdditionalTypeEnum> additionalTags,
-      @RequestParam(name = "supermarket", required = false) List<SupermarketEnum> supermarkets,
+      @RequestParam(name = "additional", required = false) List<ProductAdditionalTypeEnum> additionalTags,
+      @RequestParam(name = "supermarkets", required = false) List<SupermarketEnum> supermarkets,
       @RequestParam(name = "name", required = false) List<String> name,
       @RequestParam(name = "shop", required = false) List<String> shop) {
 
@@ -162,43 +146,69 @@ public class ProductController {
     }
 
     for (Product prod : products) {
-      resourceProducts.add(getAllLinksResourceWithAllLinks(prod));
+      resourceProducts.add(new Resource<>(prod,
+          linkTo(methodOn(ProductController.class).getProductByBarcode(prod.getBarcode()))
+              .withSelfRel()));
     }
-    return new Resources<>(resourceProducts);
+    return new Resources<>(getAllLinksResourcesWithAllLinks(resourceProducts));
   }
 
   @GetMapping("/additionalEnum")
   ProductAdditionalTypeEnum[] getAdditionalEnums() {
-    return new ProductAdditionalTypeEnum[]{ECOLOGIC, PROXIMITY, FAIR_TRADE, SPORTS_SUPPLEMENT};
+    return ProductAdditionalTypeEnum.values();
   }
 
   @GetMapping("/baseEnum")
   ProductBaseTypeEnum[] getBaseEnums() {
-    return new ProductBaseTypeEnum[]{VEGAN, VEGETARIAN, NOT_VEGGIE};
+    return ProductBaseTypeEnum.values();
   }
 
   @GetMapping("/supermarketEnum")
   SupermarketEnum[] getSupermarketEnums() {
-    return new SupermarketEnum[]{BON_PREU, CAPRABO, ALDI, LIDL, MERCADONA, CARREFOUR, CONSUM,
-        OTHERS};
+    return SupermarketEnum.values();
   }
 
   @GetMapping("/orderEnum")
   OrderTypeEnum[] getOrderEnums() {
-    return new OrderTypeEnum[]{DATE_ASC, DATE_DESC, HIGH_RATE, LOW_RATE, TODAY};
+    return OrderTypeEnum.values();
+  }
+
+  @DeleteMapping("{id}")
+  void deleteProductById(@PathVariable Long id) {
+    productRepository.deleteById(id);
   }
 
 
   /**
    * private functions
    */
+  Resources<Resource<Product>> getAllLinksResourcesWithAllLinks(List<Resource<Product>> p) {
+    return new Resources<>(p,
+        linkTo(methodOn(ProductController.class).getAllProducts(TODAY))
+            .withRel("productsOrderToday"),
+        linkTo(methodOn(ProductController.class).getAllProducts(HIGH_RATE))
+            .withRel("productsOrderHighRate"),
+        linkTo(methodOn(ProductController.class).getAllProducts(LOW_RATE))
+            .withRel("productsOrderLowRate"),
+        linkTo(methodOn(ProductController.class).getAllProducts(DATE_ASC))
+            .withRel("productsOrderDateAsc"),
+        linkTo(methodOn(ProductController.class).getAllProducts(DATE_DESC))
+            .withRel("productsOrderDateDesc"));
+  }
+
   Resource<Product> getAllLinksResourceWithAllLinks(Product p) {
     return new Resource<>(p,
-        linkTo(methodOn(ProductController.class).getProductByBarcode(p.getBarcode())).withSelfRel(),
-        linkTo(methodOn(ProductController.class).getAllProducts(TODAY)).withRel("products"),
-        linkTo(methodOn(ProductController.class).getAllProducts(HIGH_RATE)).withRel("products"),
-        linkTo(methodOn(ProductController.class).getAllProducts(LOW_RATE)).withRel("products"),
-        linkTo(methodOn(ProductController.class).getAllProducts(DATE_ASC)).withRel("products"),
-        linkTo(methodOn(ProductController.class).getAllProducts(DATE_DESC)).withRel("products"));
+        linkTo(methodOn(ProductController.class).getProductByBarcode(p.getBarcode()))
+            .withRel("product"),
+        linkTo(methodOn(ProductController.class).getAllProducts(TODAY))
+            .withRel("productsOrderToday"),
+        linkTo(methodOn(ProductController.class).getAllProducts(HIGH_RATE))
+            .withRel("productsOrderHighRate"),
+        linkTo(methodOn(ProductController.class).getAllProducts(LOW_RATE))
+            .withRel("productsOrderLowRate"),
+        linkTo(methodOn(ProductController.class).getAllProducts(DATE_ASC))
+            .withRel("productsOrderDateAsc"),
+        linkTo(methodOn(ProductController.class).getAllProducts(DATE_DESC))
+            .withRel("productsOrderDateDesc"));
   }
 }

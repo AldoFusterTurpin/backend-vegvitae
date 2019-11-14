@@ -1,6 +1,7 @@
 package com.vegvitae.vegvitae.model;
 
 import java.sql.Date;
+import java.util.Calendar;
 import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -63,7 +64,7 @@ public class Product {
   public Product(long barcode, String name, ProductBaseTypeEnum baseType,
       Set<ProductAdditionalTypeEnum> additionalTypes,
       Set<SupermarketEnum> supermarketsAvailable, String shop, User uploader,
-      String uploaderComment, Long price, Date creationDate) {
+      String uploaderComment, Long price) {
     this.barcode = barcode;
     this.name = name;
     this.baseType = baseType;
@@ -73,9 +74,12 @@ public class Product {
     this.uploader = uploader;
     this.uploaderComment = uploaderComment;
     this.price = price;
-    this.creationDate = creationDate;
     this.numberOfRatings = 0;
     this.totalRatings = 0;
+
+    Calendar calendar = Calendar.getInstance();
+    java.util.Date currentDate = calendar.getTime();
+    this.creationDate = new java.sql.Date(currentDate.getTime());
   }
 
   public long getBarcode() {

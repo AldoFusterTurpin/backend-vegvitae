@@ -1,11 +1,13 @@
 package com.vegvitae.vegvitae.controller;
 
+
 import static com.vegvitae.vegvitae.model.OrderTypeEnum.*;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.OrderTypeEnum;
+
 import com.vegvitae.vegvitae.model.Product;
 import com.vegvitae.vegvitae.model.ProductAdditionalTypeEnum;
 import com.vegvitae.vegvitae.model.ProductBaseTypeEnum;
@@ -23,7 +25,6 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.model.newProductDTO;
 import com.vegvitae.vegvitae.repository.UserRepository;
@@ -34,8 +35,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.hateoas.Link;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -50,16 +51,21 @@ public class ProductController {
   @Autowired
   private UserRepository userRepository;
 
-  @PostMapping
-  @ResponseBody
-  @ResponseStatus(HttpStatus.CREATED)
-  public Product newProduct(@Valid @RequestBody newProductDTO productDTO) {
-    if (productRepository.existsById(productDTO.getBarcode())) {
+  @PostMapping(produces = "application/hal+json")
+  public ResponseEntity<Resource<Product>> newProduct(@Valid @RequestBody newProductDTO productDTO) {
+    Product product = new Product();
+    Link selfLink;
+    Resource<Product> productWithLink;
 
+    if (productRepository.existsById(productDTO.getBarcode())) {
+      product = productRepository.getOne(productDTO.getBarcode());
+      selfLink = linkTo(ProductController.class).slash(product.getBarcode()).withSelfRel();
+      productWithLink = new Resource<Product>(product, selfLink);
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(productWithLink);
     }
 
+    // Passing the data from the DTO to a object of type Product
     User uploader = userRepository.getOne(productDTO.getUploaderId());
-    Product product = new Product();
     product.setBarcode(productDTO.getBarcode());
     product.setName(productDTO.getName());
     product.setBaseType(productDTO.getBaseType());
@@ -69,8 +75,11 @@ public class ProductController {
     product.setUploader(uploader);
     product.setUploaderComment(productDTO.getUploaderComment());
 
-    productRepository.saveAndFlush(product);
-    return product;
+    productRepository.save(product);
+
+    selfLink = linkTo(ProductController.class).slash(product.getBarcode()).withSelfRel();
+    productWithLink = new Resource<Product>(product, selfLink);
+    return ResponseEntity.status(HttpStatus.CREATED).body(productWithLink);
   }
 
   @GetMapping

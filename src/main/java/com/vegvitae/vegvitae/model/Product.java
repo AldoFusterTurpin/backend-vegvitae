@@ -2,6 +2,7 @@ package com.vegvitae.vegvitae.model;
 
 import java.sql.Date;
 import java.util.Calendar;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -9,7 +10,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotBlank;
@@ -18,6 +18,7 @@ import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "products")
+@JsonIgnoreProperties("hibernateLazyInitializer") // Removes a useless field from the JSON response
 public class Product {
 
   @Id

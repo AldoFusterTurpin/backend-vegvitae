@@ -9,8 +9,7 @@ public enum ExceptionMessages {
   USERNAME_IN_USE("This username is already in use"),
   INVALID_DESCRIPTION("The personal description must be shorter than 160 characters"),
   INVALID_SOCIAL_MEDIA_LINKS_LENGTH("Social media links limit exceeded. Maximum is 4"),
-  INVALID_CREDENTIALS("Credentials are not correct. Try again"),
-  PRODUCT_EXISTS("There is already a product with this barcode.");
+  INVALID_CREDENTIALS("Credentials are not correct. Try again");
 
   private String message;
 

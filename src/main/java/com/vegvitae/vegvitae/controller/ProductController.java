@@ -55,8 +55,7 @@ public class ProductController {
   @ResponseStatus(HttpStatus.CREATED)
   public Product newProduct(@Valid @RequestBody newProductDTO productDTO) {
     if (productRepository.existsById(productDTO.getBarcode())) {
-      throw new GenericException(HttpStatus.BAD_REQUEST,
-          ExceptionMessages.PRODUCT_EXISTS.getErrorMessage());
+
     }
 
     User uploader = userRepository.getOne(productDTO.getUploaderId());

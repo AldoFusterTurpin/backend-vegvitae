@@ -1,5 +1,7 @@
 package com.vegvitae.vegvitae.model;
 
+import java.sql.Date;
+import java.util.Calendar;
 import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -7,6 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotBlank;
@@ -33,9 +36,19 @@ public class Product {
 
   private String shop;
 
+  @NotBlank
+  private Date creationDate;
+
+  @DecimalMin(value = "0.0", message = "Price has to be at least {value}.")
+  private Long price;
+
   @DecimalMin(value = "0.0", message = "Rating has to be at least {value}.")
   @DecimalMax(value = "5.0", message = "Rating has to be less than or equal to {value}.")
   private double rating;
+
+  private int numberOfRatings;
+
+  private double totalRatings;
 
   @ManyToOne
   @JoinColumn(name = "uploader_id")
@@ -45,9 +58,13 @@ public class Product {
   @Size(max = 160, message = "The uploader comment has to be smaller than {max} characters.")
   private String uploaderComment;
 
+  public Product() {
+  }
 
-  public Product(long barcode, String name, ProductBaseTypeEnum baseType, Set<ProductAdditionalTypeEnum> additionalTypes,
-      Set<SupermarketEnum> supermarketsAvailable, String shop, User uploader, String uploaderComment) {
+  public Product(long barcode, String name, ProductBaseTypeEnum baseType,
+      Set<ProductAdditionalTypeEnum> additionalTypes,
+      Set<SupermarketEnum> supermarketsAvailable, String shop, User uploader,
+      String uploaderComment, Long price) {
     this.barcode = barcode;
     this.name = name;
     this.baseType = baseType;
@@ -56,7 +73,13 @@ public class Product {
     this.shop = shop;
     this.uploader = uploader;
     this.uploaderComment = uploaderComment;
-    rating = 0;
+    this.price = price;
+    this.numberOfRatings = 0;
+    this.totalRatings = 0;
+
+    Calendar calendar = Calendar.getInstance();
+    java.util.Date currentDate = calendar.getTime();
+    this.creationDate = new java.sql.Date(currentDate.getTime());
   }
 
   public long getBarcode() {
@@ -67,12 +90,44 @@ public class Product {
     this.barcode = barcode;
   }
 
+  public Long getPrice() {
+    return price;
+  }
+
+  public void setPrice(Long price) {
+    this.price = price;
+  }
+
   public String getName() {
     return name;
   }
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public int getNumberOfRatings() {
+    return numberOfRatings;
+  }
+
+  public void setNumberOfRatings(int numberOfRatings) {
+    this.numberOfRatings = numberOfRatings;
+  }
+
+  public double getTotalRatings() {
+    return totalRatings;
+  }
+
+  public void setTotalRatings(double totalRatings) {
+    this.totalRatings = totalRatings;
+  }
+
+  public Date getCreationDate() {
+    return creationDate;
+  }
+
+  public void setCreationDate(Date creationDate) {
+    this.creationDate = creationDate;
   }
 
   public ProductBaseTypeEnum getBaseType() {

@@ -36,12 +36,17 @@ public class User {
   private List<String> socialMediaLinks = new ArrayList<String>(
       4); //por que solo pueden haber 4 links
 
+  @ElementCollection
   @OneToMany(mappedBy = "uploader")
   private Set<Product> uploadedProducts;
 
   @JsonIgnore
   @Lob
   private byte[] image;
+
+  //@OneToMany(mappedBy = "favourites")
+  @ElementCollection
+  private Set<Product> favouriteProducts;
 
   User() {
   }

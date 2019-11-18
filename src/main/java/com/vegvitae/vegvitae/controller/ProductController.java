@@ -75,6 +75,10 @@ public class ProductController {
     product.setUploader(uploader);
     product.setUploaderComment(productDTO.getUploaderComment());
 
+    Calendar calendar = Calendar.getInstance();
+    java.util.Date currentDate = calendar.getTime();
+    product.setCreationDate(new java.sql.Date(currentDate.getTime()));
+
     productRepository.save(product);
 
     selfLink = linkTo(ProductController.class).slash(product.getBarcode()).withSelfRel();

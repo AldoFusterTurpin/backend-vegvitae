@@ -38,7 +38,7 @@ public class Product {
 
   private String shop;
 
-  @NotBlank
+  @NotNull
   private Date creationDate;
 
   @DecimalMin(value = "0.0", message = "Price has to be at least {value}.")

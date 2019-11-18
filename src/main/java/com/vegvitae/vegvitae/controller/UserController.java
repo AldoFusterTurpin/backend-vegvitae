@@ -6,6 +6,7 @@ import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.repository.UserRepository;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,7 +146,8 @@ class UserController {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the user"));
     if(user.getImage() != null) {
-      return new ResponseEntity<>(user.getImage(), HttpStatus.OK);
+      byte[] imageBytes = user.getImage();
+      return new ResponseEntity<>(Base64.getEncoder().encode(imageBytes), HttpStatus.OK);
     }
     else throw new GenericException(HttpStatus.BAD_REQUEST, "User has no image");
   }

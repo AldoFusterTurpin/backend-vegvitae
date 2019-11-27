@@ -52,7 +52,8 @@ public class ProductController {
   private UserRepository userRepository;
 
   @PostMapping(produces = "application/hal+json")
-  public ResponseEntity<Resource<Product>> newProduct(@Valid @RequestBody newProductDTO productDTO) {
+  public ResponseEntity<Resource<Product>> newProduct(
+      @Valid @RequestBody newProductDTO productDTO) {
     Product product = new Product();
     Link selfLink;
     Resource<Product> productWithLink;
@@ -101,8 +102,7 @@ public class ProductController {
                 linkTo(methodOn(ProductController.class).getProductByBarcode(product.getBarcode()))
                     .withSelfRel()))
             .collect(Collectors.toList());
-        return new Resources<>(products,
-            linkTo(methodOn(ProductController.class).getAllProducts(TODAY)).withSelfRel());
+        return getAllLinksResourcesWithAllLinks(products);
       case HIGH_RATE:
         comparator = Comparator.comparing((Product::getRating)).reversed();
         break;
@@ -127,8 +127,7 @@ public class ProductController {
             linkTo(methodOn(ProductController.class).getProductByBarcode(product.getBarcode()))
                 .withSelfRel()))
         .collect(Collectors.toList());
-    return new Resources<>(products,
-        linkTo(methodOn(ProductController.class).getAllProducts(orderBy)).withSelfRel());
+    return getAllLinksResourcesWithAllLinks(products);
   }
 
   @GetMapping("/{id}")
@@ -139,7 +138,9 @@ public class ProductController {
             () -> new GenericException(HttpStatus.NOT_FOUND,
                 "Cannot find product with barcode " + id));
 
-    return getAllLinksResourceWithAllLinks(product);
+    return new Resource<Product>(product,
+        linkTo(methodOn(ProductController.class).getProductByBarcode(product.getBarcode()))
+            .withSelfRel());
 
   }
 
@@ -232,22 +233,6 @@ public class ProductController {
    */
   Resources<Resource<Product>> getAllLinksResourcesWithAllLinks(List<Resource<Product>> p) {
     return new Resources<>(p,
-        linkTo(methodOn(ProductController.class).getAllProducts(TODAY))
-            .withRel("productsOrderToday"),
-        linkTo(methodOn(ProductController.class).getAllProducts(HIGH_RATE))
-            .withRel("productsOrderHighRate"),
-        linkTo(methodOn(ProductController.class).getAllProducts(LOW_RATE))
-            .withRel("productsOrderLowRate"),
-        linkTo(methodOn(ProductController.class).getAllProducts(DATE_ASC))
-            .withRel("productsOrderDateAsc"),
-        linkTo(methodOn(ProductController.class).getAllProducts(DATE_DESC))
-            .withRel("productsOrderDateDesc"));
-  }
-
-  Resource<Product> getAllLinksResourceWithAllLinks(Product p) {
-    return new Resource<>(p,
-        linkTo(methodOn(ProductController.class).getProductByBarcode(p.getBarcode()))
-            .withRel("product"),
         linkTo(methodOn(ProductController.class).getAllProducts(TODAY))
             .withRel("productsOrderToday"),
         linkTo(methodOn(ProductController.class).getAllProducts(HIGH_RATE))

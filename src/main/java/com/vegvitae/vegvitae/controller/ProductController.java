@@ -146,8 +146,8 @@ public class ProductController {
           .filter(prod -> prod.getContent().getUploader().getId().equals(userId)).collect(
               Collectors.toList());
     }
-    return new Resources<>(products,
-        linkTo(methodOn(ProductController.class).getAllProducts(orderBy, userId)).withSelfRel());
+
+    return getAllLinksResourcesWithAllLinks(products);
   }
 
   @GetMapping("/{id}")
@@ -158,7 +158,9 @@ public class ProductController {
             () -> new GenericException(HttpStatus.NOT_FOUND,
                 "Cannot find product with barcode " + id));
 
-    return getAllLinksResourceWithAllLinks(product);
+    return new Resource<Product>(product,
+        linkTo(methodOn(ProductController.class).getProductByBarcode(product.getBarcode()))
+            .withSelfRel());
 
   }
 

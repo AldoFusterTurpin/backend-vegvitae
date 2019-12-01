@@ -52,7 +52,8 @@ public class ProductController {
   private UserRepository userRepository;
 
   @PostMapping(produces = "application/hal+json")
-  public ResponseEntity<Resource<Product>> newProduct(@Valid @RequestBody newProductDTO productDTO) {
+  public ResponseEntity<Resource<Product>> newProduct(
+      @Valid @RequestBody newProductDTO productDTO) {
     Product product = new Product();
     Link selfLink;
     Resource<Product> productWithLink;
@@ -88,38 +89,51 @@ public class ProductController {
 
   @GetMapping
   Resources<Resource<Product>> getAllProducts(
-      @RequestParam(name = "order", required = false) OrderTypeEnum orderBy) {
+      @RequestParam(name = "order", required = false) OrderTypeEnum orderBy,
+      @RequestParam(name = "user", required = false) Long userId) {
 
-    Comparator<Product> comparator;
-    switch (orderBy) {
-      case TODAY:
-        Calendar calendar = Calendar.getInstance();
-        java.util.Date currentDate = calendar.getTime();
-        java.sql.Date today = new java.sql.Date(currentDate.getTime());
-        List<Resource<Product>> products = productRepository.findByCreationDate(today).stream()
-            .map(product -> new Resource<>(product,
-                linkTo(methodOn(ProductController.class).getProductByBarcode(product.getBarcode()))
-                    .withSelfRel()))
-            .collect(Collectors.toList());
-        return new Resources<>(products,
-            linkTo(methodOn(ProductController.class).getAllProducts(TODAY)).withSelfRel());
-      case HIGH_RATE:
-        comparator = Comparator.comparing((Product::getRating)).reversed();
-        break;
-      case LOW_RATE:
-        comparator = Comparator.comparing((Product::getRating));
-        break;
-      case DATE_ASC:
-        comparator = Comparator.comparing((Product::getCreationDate));
-        break;
-      case DATE_DESC:
-        comparator = Comparator.comparing((Product::getCreationDate)).reversed();
-        break;
-      default:
-        comparator = Comparator.comparing(Product::getRating);
-        comparator = comparator.thenComparing(Comparator.comparing(Product::getCreationDate))
-            .reversed();
-        break;
+    Comparator<Product> comparator = null;
+    if(orderBy != null) {
+      switch (orderBy) {
+        case TODAY:
+          Calendar calendar = Calendar.getInstance();
+          java.util.Date currentDate = calendar.getTime();
+          java.sql.Date today = new java.sql.Date(currentDate.getTime());
+          List<Resource<Product>> products = productRepository.findByCreationDate(today).stream()
+              .map(product -> new Resource<>(product,
+                  linkTo(
+                      methodOn(ProductController.class).getProductByBarcode(product.getBarcode()))
+                      .withSelfRel()))
+              .collect(Collectors.toList());
+          if (userId != null) {
+            products = products.stream()
+                .filter(prod -> prod.getContent().getUploader().getId().equals(userId)).collect(
+                    Collectors.toList());
+          }
+          return new Resources<>(products,
+              linkTo(methodOn(ProductController.class).getAllProducts(TODAY, userId))
+                  .withSelfRel());
+        case HIGH_RATE:
+          comparator = Comparator.comparing((Product::getRating)).reversed();
+          break;
+        case LOW_RATE:
+          comparator = Comparator.comparing((Product::getRating));
+          break;
+        case DATE_ASC:
+          comparator = Comparator.comparing((Product::getCreationDate));
+          break;
+        case DATE_DESC:
+          comparator = Comparator.comparing((Product::getCreationDate)).reversed();
+          break;
+        default:
+          comparator = Comparator.comparing(Product::getRating);
+          comparator = comparator.thenComparing(Comparator.comparing(Product::getCreationDate))
+              .reversed();
+          break;
+      }
+    }
+    else {
+      comparator = Comparator.comparing(Product::getRating);
     }
 
     List<Resource<Product>> products = productRepository.findAll().stream().sorted(comparator)
@@ -127,8 +141,13 @@ public class ProductController {
             linkTo(methodOn(ProductController.class).getProductByBarcode(product.getBarcode()))
                 .withSelfRel()))
         .collect(Collectors.toList());
+    if (userId != null) {
+      products = products.stream()
+          .filter(prod -> prod.getContent().getUploader().getId().equals(userId)).collect(
+              Collectors.toList());
+    }
     return new Resources<>(products,
-        linkTo(methodOn(ProductController.class).getAllProducts(orderBy)).withSelfRel());
+        linkTo(methodOn(ProductController.class).getAllProducts(orderBy, userId)).withSelfRel());
   }
 
   @GetMapping("/{id}")
@@ -232,15 +251,15 @@ public class ProductController {
    */
   Resources<Resource<Product>> getAllLinksResourcesWithAllLinks(List<Resource<Product>> p) {
     return new Resources<>(p,
-        linkTo(methodOn(ProductController.class).getAllProducts(TODAY))
+        linkTo(methodOn(ProductController.class).getAllProducts(TODAY, null))
             .withRel("productsOrderToday"),
-        linkTo(methodOn(ProductController.class).getAllProducts(HIGH_RATE))
+        linkTo(methodOn(ProductController.class).getAllProducts(HIGH_RATE, null))
             .withRel("productsOrderHighRate"),
-        linkTo(methodOn(ProductController.class).getAllProducts(LOW_RATE))
+        linkTo(methodOn(ProductController.class).getAllProducts(LOW_RATE, null))
             .withRel("productsOrderLowRate"),
-        linkTo(methodOn(ProductController.class).getAllProducts(DATE_ASC))
+        linkTo(methodOn(ProductController.class).getAllProducts(DATE_ASC, null))
             .withRel("productsOrderDateAsc"),
-        linkTo(methodOn(ProductController.class).getAllProducts(DATE_DESC))
+        linkTo(methodOn(ProductController.class).getAllProducts(DATE_DESC, null))
             .withRel("productsOrderDateDesc"));
   }
 
@@ -248,15 +267,15 @@ public class ProductController {
     return new Resource<>(p,
         linkTo(methodOn(ProductController.class).getProductByBarcode(p.getBarcode()))
             .withRel("product"),
-        linkTo(methodOn(ProductController.class).getAllProducts(TODAY))
+        linkTo(methodOn(ProductController.class).getAllProducts(TODAY, null))
             .withRel("productsOrderToday"),
-        linkTo(methodOn(ProductController.class).getAllProducts(HIGH_RATE))
+        linkTo(methodOn(ProductController.class).getAllProducts(HIGH_RATE, null))
             .withRel("productsOrderHighRate"),
-        linkTo(methodOn(ProductController.class).getAllProducts(LOW_RATE))
+        linkTo(methodOn(ProductController.class).getAllProducts(LOW_RATE, null))
             .withRel("productsOrderLowRate"),
-        linkTo(methodOn(ProductController.class).getAllProducts(DATE_ASC))
+        linkTo(methodOn(ProductController.class).getAllProducts(DATE_ASC, null))
             .withRel("productsOrderDateAsc"),
-        linkTo(methodOn(ProductController.class).getAllProducts(DATE_DESC))
+        linkTo(methodOn(ProductController.class).getAllProducts(DATE_DESC, null))
             .withRel("productsOrderDateDesc"));
   }
 }

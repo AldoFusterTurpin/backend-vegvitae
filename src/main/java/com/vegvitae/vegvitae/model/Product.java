@@ -5,9 +5,12 @@ import java.sql.Date;
 import java.util.Calendar;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
@@ -78,6 +81,10 @@ public class Product {
   @JsonIgnore
   @Lob
   private byte[] image;
+
+  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinTable(name = "comments", joinColumns = @JoinColumn(name = "productBarcode"), inverseJoinColumns = @JoinColumn(name = "commentId"))
+  List<Comment> comments;
 
   public Product() {
   }
@@ -237,5 +244,13 @@ public class Product {
     Calendar calendar = Calendar.getInstance();
     java.util.Date currentDate = calendar.getTime();
     return new java.sql.Date(currentDate.getTime());
+  }
+
+  public List<Comment> getComments() {
+    return comments;
+  }
+
+  public void setComments(List<Comment> comments) {
+    this.comments = comments;
   }
 }

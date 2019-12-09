@@ -1,0 +1,18 @@
+image: java:latest
+
+stages:
+  - build
+  - test
+  - deploy
+
+maven_build:
+  # A job is always executed within a stage.
+  # If no stage is set, it defaults to 'test'.
+  stage: test
+  tags:
+    - maven
+  # Here execute terminal commands.
+  # If any of the commands returns a non zero exit code the job fails.
+  script:
+    - echo "Building project with maven"
+    - mvn verify

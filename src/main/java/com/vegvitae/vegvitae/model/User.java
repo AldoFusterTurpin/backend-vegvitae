@@ -3,13 +3,11 @@ package com.vegvitae.vegvitae.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.*;
 import java.util.List;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 @Entity
 @Table(
@@ -35,8 +33,7 @@ public class User {
   private String personalDescription;
 
   @ElementCollection
-  private List<String> socialMediaLinks = new ArrayList<String>(
-      4); //por que solo pueden haber 4 links
+  private List<String> socialMediaLinks = new ArrayList<String>(4);
 
   @ElementCollection
   @OneToMany(mappedBy = "uploader")
@@ -46,9 +43,9 @@ public class User {
   @Lob
   private byte[] image;
 
-  //@OneToMany(mappedBy = "favourites")
-  @ElementCollection
-  private Set<Product> favouriteProducts;
+  @JsonIgnore
+  @OneToMany(mappedBy = "user")
+  private Set<Rating> productRatings;
 
   User() {
   }
@@ -60,6 +57,7 @@ public class User {
     this.email = email;
     this.personalDescription = personalDescription;
     this.socialMediaLinks = socialMediaLinks;
+    this.productRatings = new HashSet<Rating>();
   }
 
   public Long getId() {
@@ -116,6 +114,14 @@ public class User {
 
   public void setImage(byte[] image) {
     this.image = image;
+  }
+
+  public Set<Rating> getProductRatings() {
+    return productRatings;
+  }
+
+  public void setProductRatings(Set<Rating> productRatings) {
+    this.productRatings = productRatings;
   }
 }
 

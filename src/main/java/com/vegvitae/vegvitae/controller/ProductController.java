@@ -1,42 +1,45 @@
 package com.vegvitae.vegvitae.controller;
 
 
-import static com.vegvitae.vegvitae.model.OrderTypeEnum.*;
+import static com.vegvitae.vegvitae.model.OrderTypeEnum.DATE_ASC;
+import static com.vegvitae.vegvitae.model.OrderTypeEnum.DATE_DESC;
+import static com.vegvitae.vegvitae.model.OrderTypeEnum.HIGH_RATE;
+import static com.vegvitae.vegvitae.model.OrderTypeEnum.LOW_RATE;
+import static com.vegvitae.vegvitae.model.OrderTypeEnum.TODAY;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
+import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.OrderTypeEnum;
-
 import com.vegvitae.vegvitae.model.Product;
 import com.vegvitae.vegvitae.model.ProductAdditionalTypeEnum;
 import com.vegvitae.vegvitae.model.ProductBaseTypeEnum;
 import com.vegvitae.vegvitae.model.SupermarketEnum;
+import com.vegvitae.vegvitae.model.User;
+import com.vegvitae.vegvitae.model.newProductDTO;
 import com.vegvitae.vegvitae.repository.ProductRepository;
-import java.util.Calendar;
+import com.vegvitae.vegvitae.repository.UserRepository;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import com.vegvitae.vegvitae.model.User;
-import com.vegvitae.vegvitae.model.newProductDTO;
-import com.vegvitae.vegvitae.repository.UserRepository;
-import javax.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.hateoas.Link;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -52,39 +55,24 @@ public class ProductController {
   private UserRepository userRepository;
 
   @PostMapping(produces = "application/hal+json")
-  public ResponseEntity<Resource<Product>> newProduct(
-      @Valid @RequestBody newProductDTO productDTO) {
-    Product product = new Product();
-    Link selfLink;
-    Resource<Product> productWithLink;
+  public Resource<Product> newProduct(@Valid @RequestBody newProductDTO productDTO) {
 
     if (productRepository.existsById(productDTO.getBarcode())) {
-      product = productRepository.getOne(productDTO.getBarcode());
-      selfLink = linkTo(ProductController.class).slash(product.getBarcode()).withSelfRel();
-      productWithLink = new Resource<Product>(product, selfLink);
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(productWithLink);
+      throw new GenericException(HttpStatus.CONFLICT,
+          ExceptionMessages.PRODUCT_EXISTS.getErrorMessage());
     }
 
-    // Passing the data from the DTO to a object of type Product
+    // Creating an instance of Product with the content of the DTO
     User uploader = userRepository.getOne(productDTO.getUploaderId());
-    product.setBarcode(productDTO.getBarcode());
-    product.setName(productDTO.getName());
-    product.setBaseType(productDTO.getBaseType());
-    product.setAdditionalTypes(productDTO.getAdditionalTypes());
-    product.setSupermarketsAvailable(productDTO.getSupermarketsAvailable());
-    product.setShop(productDTO.getShop());
-    product.setUploader(uploader);
-    product.setUploaderComment(productDTO.getUploaderComment());
-
-    Calendar calendar = Calendar.getInstance();
-    java.util.Date currentDate = calendar.getTime();
-    product.setCreationDate(new java.sql.Date(currentDate.getTime()));
+    Product product = new Product(productDTO.getBarcode(), productDTO.getName(),
+        productDTO.getBaseType(), productDTO.getAdditionalTypes(),
+        productDTO.getSupermarketsAvailable(), productDTO.getShop(), uploader,
+        productDTO.getUploaderComment());
 
     productRepository.save(product);
 
-    selfLink = linkTo(ProductController.class).slash(product.getBarcode()).withSelfRel();
-    productWithLink = new Resource<Product>(product, selfLink);
-    return ResponseEntity.status(HttpStatus.CREATED).body(productWithLink);
+    Link selfLink = linkTo(ProductController.class).slash(product.getBarcode()).withSelfRel();
+    return new Resource<Product>(product, selfLink);
   }
 
   @GetMapping

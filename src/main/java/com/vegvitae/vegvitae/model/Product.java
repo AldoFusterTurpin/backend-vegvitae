@@ -38,11 +38,13 @@ public class Product {
 
   private String shop;
 
-  @NotNull
-  private Date creationDate;
+  @ManyToOne
+  @JoinColumn(name = "uploader_id")
+  @NotNull(message = "Uploader can't be NULL.")
+  private User uploader;
 
-  @DecimalMin(value = "0.0", message = "Price has to be at least {value}.")
-  private Long price;
+  @Size(max = 160, message = "The uploader comment has to be smaller than {max} characters.")
+  private String uploaderComment;
 
   @DecimalMin(value = "0.0", message = "Rating has to be at least {value}.")
   @DecimalMax(value = "5.0", message = "Rating has to be less than or equal to {value}.")
@@ -52,13 +54,8 @@ public class Product {
 
   private double totalRatings;
 
-  @ManyToOne
-  @JoinColumn(name = "uploader_id")
-  @NotNull(message = "Uploader can't be NULL.")
-  private User uploader;
-
-  @Size(max = 160, message = "The uploader comment has to be smaller than {max} characters.")
-  private String uploaderComment;
+  @NotNull
+  private Date creationDate;
 
   public Product() {
   }
@@ -66,7 +63,7 @@ public class Product {
   public Product(long barcode, String name, ProductBaseTypeEnum baseType,
       Set<ProductAdditionalTypeEnum> additionalTypes,
       Set<SupermarketEnum> supermarketsAvailable, String shop, User uploader,
-      String uploaderComment, Long price) {
+      String uploaderComment) {
     this.barcode = barcode;
     this.name = name;
     this.baseType = baseType;
@@ -75,13 +72,9 @@ public class Product {
     this.shop = shop;
     this.uploader = uploader;
     this.uploaderComment = uploaderComment;
-    this.price = price;
     this.numberOfRatings = 0;
     this.totalRatings = 0;
-
-    Calendar calendar = Calendar.getInstance();
-    java.util.Date currentDate = calendar.getTime();
-    this.creationDate = new java.sql.Date(currentDate.getTime());
+    this.creationDate = getCurrentDate();
   }
 
   public long getBarcode() {
@@ -90,14 +83,6 @@ public class Product {
 
   public void setBarcode(long barcode) {
     this.barcode = barcode;
-  }
-
-  public Long getPrice() {
-    return price;
-  }
-
-  public void setPrice(Long price) {
-    this.price = price;
   }
 
   public String getName() {
@@ -186,5 +171,11 @@ public class Product {
 
   public void setUploaderComment(String uploaderComment) {
     this.uploaderComment = uploaderComment;
+  }
+
+  private Date getCurrentDate() {
+    Calendar calendar = Calendar.getInstance();
+    java.util.Date currentDate = calendar.getTime();
+    return new java.sql.Date(currentDate.getTime());
   }
 }

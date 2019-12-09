@@ -1,6 +1,7 @@
 package com.vegvitae.vegvitae.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.Set;
 import javax.persistence.*;
@@ -15,6 +16,7 @@ import org.hibernate.validator.constraints.Length;
     name = "users",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"id", "username", "email"})}
 )
+@JsonIgnoreProperties("hibernateLazyInitializer") // Removes a useless field from the JSON response
 public class User {
 
   @Id

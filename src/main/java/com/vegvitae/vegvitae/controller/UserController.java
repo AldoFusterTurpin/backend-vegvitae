@@ -2,12 +2,14 @@ package com.vegvitae.vegvitae.controller;
 
 import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
+import com.vegvitae.vegvitae.model.Product;
 import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.repository.UserRepository;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -41,10 +43,11 @@ class UserController {
           Resource<User> resource = new Resource<>(user,
               linkTo(methodOn(UserController.class).getUserById(user.getId())).withSelfRel(),
               linkTo(methodOn(UserController.class).getAllUsers()).withRel("users"));
-           if(user.getImage() != null) {
-             resource.add(linkTo(methodOn(UserController.class).getUserImage(user.getId())).withRel("image"));
-           }
-           return resource;
+          if (user.getImage() != null) {
+            resource.add(
+                linkTo(methodOn(UserController.class).getUserImage(user.getId())).withRel("image"));
+          }
+          return resource;
         })
         .collect(Collectors.toList());
 
@@ -107,10 +110,11 @@ class UserController {
       throw new GenericException(HttpStatus.FORBIDDEN,
           ExceptionMessages.INVALID_CREDENTIALS.getErrorMessage());
     }
-    Resource<User> resource =  new Resource<>(loginUser,
+    Resource<User> resource = new Resource<>(loginUser,
         linkTo(methodOn(UserController.class).getUserById(loginUser.getId())).withSelfRel());
-    if(loginUser.getImage() != null) {
-      resource.add(linkTo(methodOn(UserController.class).getUserImage(loginUser.getId())).withRel("image"));
+    if (loginUser.getImage() != null) {
+      resource.add(
+          linkTo(methodOn(UserController.class).getUserImage(loginUser.getId())).withRel("image"));
     }
     return resource;
   }
@@ -122,10 +126,10 @@ class UserController {
     User user = userRepository.findById(id)
         .orElseThrow(
             () -> new GenericException(HttpStatus.NOT_FOUND, "Cannot find user with id " + id));
-    Resource<User> resource =  new Resource<>(user,
+    Resource<User> resource = new Resource<>(user,
         linkTo(methodOn(UserController.class).getUserById(id)).withSelfRel(),
         linkTo(methodOn(UserController.class).getAllUsers()).withRel("users"));
-    if(user.getImage() != null) {
+    if (user.getImage() != null) {
       resource.add(
           linkTo(methodOn(UserController.class).getUserImage(user.getId())).withRel("image"));
     }
@@ -145,11 +149,12 @@ class UserController {
   ResponseEntity<byte[]> getUserImage(@PathVariable Long id) {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the user"));
-    if(user.getImage() != null) {
+    if (user.getImage() != null) {
       byte[] imageBytes = user.getImage();
       return new ResponseEntity<>(Base64.getEncoder().encode(imageBytes), HttpStatus.OK);
+    } else {
+      throw new GenericException(HttpStatus.BAD_REQUEST, "User has no image");
     }
-    else throw new GenericException(HttpStatus.BAD_REQUEST, "User has no image");
   }
 
   @PutMapping("{id}")
@@ -189,8 +194,9 @@ class UserController {
         }).get();
     Resource resource = new Resource<>(replacedUser,
         linkTo(methodOn(UserController.class).getUserById(replacedUser.getId())).withSelfRel());
-    if(replacedUser.getImage() != null) {
-      resource.add(linkTo(methodOn(UserController.class).getUserImage(replacedUser.getId())).withRel("image"));
+    if (replacedUser.getImage() != null) {
+      resource.add(linkTo(methodOn(UserController.class).getUserImage(replacedUser.getId()))
+          .withRel("image"));
     }
     return resource;
   }
@@ -200,6 +206,19 @@ class UserController {
     userRepository.deleteById(id);
   }
 
+  @GetMapping("/{id}/favourites")
+  Resources<Set<Product>> getUserFavouriteProducts(@PathVariable Long id) {
+    User actual_user = userRepository.findById(id).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST, "Cannot find user with id " + id));
+
+    Resources resource = new Resources<>(actual_user.getFavouriteProducts());
+
+    for (Product p : actual_user.getFavouriteProducts()) {
+      resource.add(linkTo(methodOn(ProductController.class).getProductByBarcode(p.getBarcode()))
+          .withSelfRel());
+    }
+    return resource;
+  }
 
   private boolean isValidPassword(String password) {
     if (password.length() < 7) {

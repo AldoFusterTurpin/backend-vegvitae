@@ -7,7 +7,12 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.*;
 import java.util.List;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+import lombok.Data;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.validator.constraints.Length;
 
 @Entity
 @Table(
@@ -28,6 +33,7 @@ public class User {
   private String password;
 
   @NotBlank
+  @Email
   private String email;
 
   private String personalDescription;
@@ -36,16 +42,22 @@ public class User {
   private List<String> socialMediaLinks = new ArrayList<String>(4);
 
   @ElementCollection
-  @OneToMany(mappedBy = "uploader")
+  @OneToMany
   private Set<Product> uploadedProducts;
+  
+  @JsonIgnore
+  @OneToMany(mappedBy = "user")
+  private Set<Rating> productRatings;
 
   @JsonIgnore
   @Lob
   private byte[] image;
 
   @JsonIgnore
-  @OneToMany(mappedBy = "user")
-  private Set<Rating> productRatings;
+  @Column(name = "favourite_products")
+  @ManyToMany(cascade = CascadeType.ALL)
+  @JoinTable(name = "user_favourite_products", joinColumns = @JoinColumn(name = "userId"), inverseJoinColumns = @JoinColumn(name = "productBarcode"))
+  private Set<Product> favouriteProducts;
 
   User() {
   }
@@ -116,6 +128,22 @@ public class User {
     this.image = image;
   }
 
+  public Set<Product> getFavouriteProducts() {
+    return favouriteProducts;
+  }
+
+  public void setFavouriteProducts(Set<Product> favouriteProducts) {
+    this.favouriteProducts = favouriteProducts;
+  }
+
+  public void setFavouriteProduct(Product favouriteProduct) {
+    this.favouriteProducts.add(favouriteProduct);
+  }
+
+  public void deleteFavouriteProduct(Product productDeleted) {
+    this.favouriteProducts.remove(productDeleted);
+  }
+  
   public Set<Rating> getProductRatings() {
     return productRatings;
   }
@@ -124,4 +152,3 @@ public class User {
     this.productRatings = productRatings;
   }
 }
-

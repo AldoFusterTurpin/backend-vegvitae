@@ -1,14 +1,20 @@
 package com.vegvitae.vegvitae.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.Calendar;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
@@ -48,11 +54,16 @@ public class Product {
 
   @DecimalMin(value = "0.0", message = "Rating has to be at least {value}.")
   @DecimalMax(value = "5.0", message = "Rating has to be less than or equal to {value}.")
-  private double rating;
+  private Double rating;
 
-  private int numberOfRatings;
+  private long numRatings;
 
-  private double totalRatings;
+  @JsonIgnore
+  private double sumRatings;
+
+  @JsonIgnore
+  @OneToMany(mappedBy = "product")
+  private Set<Rating> ratings;
 
   @NotNull
   private Date creationDate;
@@ -72,8 +83,10 @@ public class Product {
     this.shop = shop;
     this.uploader = uploader;
     this.uploaderComment = uploaderComment;
-    this.numberOfRatings = 0;
-    this.totalRatings = 0;
+    this.rating = 0.0;
+    this.numRatings = 0;
+    this.sumRatings = 0;
+    this.ratings = new HashSet<Rating>();
     this.creationDate = getCurrentDate();
   }
 
@@ -93,20 +106,47 @@ public class Product {
     this.name = name;
   }
 
-  public int getNumberOfRatings() {
-    return numberOfRatings;
+  public Set<Rating> getRatings() {
+    return ratings;
   }
 
-  public void setNumberOfRatings(int numberOfRatings) {
-    this.numberOfRatings = numberOfRatings;
+  public void setRatings(Set<Rating> ratings) {
+    this.ratings = ratings;
   }
 
-  public double getTotalRatings() {
-    return totalRatings;
+  public long getNumRatings() {
+    return numRatings;
   }
 
-  public void setTotalRatings(double totalRatings) {
-    this.totalRatings = totalRatings;
+  public void setNumRatings(long numRatings) {
+    this.numRatings = numRatings;
+  }
+
+  public double getSumRatings() {
+    return sumRatings;
+  }
+
+  public void setSumRatings(double sumRatings) {
+    this.sumRatings = sumRatings;
+  }
+
+  public void setRating(Double rating) {
+    this.rating = rating;
+  }
+
+  public Double getRating(){
+    return rating;
+  }
+
+  public void addUserRating(Double value) {
+    numRatings++;
+    sumRatings += value;
+    rating = sumRatings / numRatings;
+  }
+
+  public void changeUserRating(Double oldValue, Double newValue){
+    sumRatings += newValue - oldValue;
+    rating = sumRatings / numRatings;
   }
 
   public Date getCreationDate() {
@@ -147,14 +187,6 @@ public class Product {
 
   public void setShop(String shop) {
     this.shop = shop;
-  }
-
-  public double getRating() {
-    return rating;
-  }
-
-  public void setRating(double rating) {
-    this.rating = rating;
   }
 
   public User getUploader() {

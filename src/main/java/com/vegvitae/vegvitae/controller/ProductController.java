@@ -11,20 +11,26 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
+import com.vegvitae.vegvitae.model.newProductDTO;
 import com.vegvitae.vegvitae.model.OrderTypeEnum;
 import com.vegvitae.vegvitae.model.Product;
 import com.vegvitae.vegvitae.model.ProductAdditionalTypeEnum;
 import com.vegvitae.vegvitae.model.ProductBaseTypeEnum;
+import com.vegvitae.vegvitae.model.Rating;
 import com.vegvitae.vegvitae.model.SupermarketEnum;
 import com.vegvitae.vegvitae.model.User;
-import com.vegvitae.vegvitae.model.newProductDTO;
+import com.vegvitae.vegvitae.model.UserProductId;
 import com.vegvitae.vegvitae.repository.ProductRepository;
+import com.vegvitae.vegvitae.repository.RatingRepository;
 import com.vegvitae.vegvitae.repository.UserRepository;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -37,6 +43,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,6 +60,9 @@ public class ProductController {
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private RatingRepository ratingRepository;
 
   @PostMapping(produces = "application/hal+json")
   public Resource<Product> newProduct(@Valid @RequestBody newProductDTO productDTO) {
@@ -233,11 +243,7 @@ public class ProductController {
     productRepository.deleteById(id);
   }
 
-
-  /**
-   * private functions
-   */
-  Resources<Resource<Product>> getAllLinksResourcesWithAllLinks(List<Resource<Product>> p) {
+  private Resources<Resource<Product>> getAllLinksResourcesWithAllLinks(List<Resource<Product>> p) {
     return new Resources<>(p,
         linkTo(methodOn(ProductController.class).getAllProducts(TODAY, null))
             .withRel("productsOrderToday"),
@@ -251,7 +257,7 @@ public class ProductController {
             .withRel("productsOrderDateDesc"));
   }
 
-  Resource<Product> getAllLinksResourceWithAllLinks(Product p) {
+  private Resource<Product> getAllLinksResourceWithAllLinks(Product p) {
     return new Resource<>(p,
         linkTo(methodOn(ProductController.class).getProductByBarcode(p.getBarcode()))
             .withRel("product"),
@@ -265,5 +271,83 @@ public class ProductController {
             .withRel("productsOrderDateAsc"),
         linkTo(methodOn(ProductController.class).getAllProducts(DATE_DESC, null))
             .withRel("productsOrderDateDesc"));
+  }
+
+  @GetMapping("/{productId}/rating")
+  public Resource<Map<String, Double>> getProductRating(@PathVariable Long productId) {
+    if (!productRepository.existsById(productId)) {
+      throw new GenericException(HttpStatus.NOT_FOUND,
+          "Product with id " + productId + " doesn't exist");
+    }
+
+    Map<String, Double> body = new HashMap<String, Double>();
+    body.put("rating", productRepository.getOne(productId).getRating());
+
+    Link selfLink = linkTo(methodOn(ProductController.class).getProductRating(productId))
+        .withSelfRel();
+    return new Resource<Map<String, Double>>(body, selfLink);
+  }
+
+  @GetMapping("/{productId}/users/{userId}/rating")
+  public Resource<Map<String, Double>> getUserRating(@PathVariable Long productId, @PathVariable Long userId) {
+    if (!productRepository.existsById(productId)) {
+      throw new GenericException(HttpStatus.NOT_FOUND,
+          "Product with id " + productId + " doesn't exist");
+    }
+    else if (!userRepository.existsById(userId)) {
+      throw new GenericException(HttpStatus.NOT_FOUND,
+          "User with id " + userId + " doesn't exist");
+    }
+    else if (!ratingRepository.existsById(new UserProductId(userId, productId))) {
+      throw new GenericException(HttpStatus.NOT_FOUND,
+          "The user hasn’t rated this product");
+    }
+
+    Map<String, Double> body = new HashMap<String, Double>();
+    body.put("rating", ratingRepository.getOne(new UserProductId(userId, productId)).getRating());
+
+    Link selfLink = linkTo(methodOn(ProductController.class).getUserRating(productId, userId))
+        .withSelfRel();
+    return new Resource<Map<String, Double>>(body, selfLink);
+  }
+
+  @PutMapping("/{productId}/users/{userId}/rating")
+  public Resource<Product> addRating(@PathVariable Long productId, @PathVariable Long userId,
+      @RequestBody Map<String, Double> body) {
+    Double value = body.get("value");
+    User user = userRepository.getOne(userId);
+    Product product = productRepository.getOne(productId);
+    Rating newRating = new Rating(user, product, value);
+
+    // Make the associations between the join table Rating, User and Product
+    Set<Rating> userRatings = user.getProductRatings();
+    Set<Rating> productRatings = product.getRatings();
+    if (ratingRepository.existsById(new UserProductId(userId, productId))) {
+      Rating oldRating = ratingRepository.getOne(new UserProductId(userId, productId));
+      // Change the user product rating
+      product.changeUserRating(oldRating.getRating(), value);
+      userRatings.remove(oldRating);
+      productRatings.remove(oldRating);
+      ratingRepository.delete(oldRating);
+    }
+    else {
+      // Add a new user rating to Product
+      product.addUserRating(value);
+    }
+    userRatings.add(newRating);
+    productRatings.add(newRating);
+
+    // Save the entry into the join table Rating
+    ratingRepository.save(newRating);
+
+    // Update the state of the Product entity
+    productRepository.save(product);
+
+    // Update the state of the User entity
+    userRepository.save(user);
+
+    Link selfLink = linkTo(methodOn(ProductController.class).addRating(productId, userId, new HashMap<String, Double>()))
+        .withSelfRel();
+    return new Resource<Product>(product, selfLink);
   }
 }

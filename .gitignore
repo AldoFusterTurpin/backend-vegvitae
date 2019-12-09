@@ -29,3 +29,5 @@ rest.iml
 hs_err_pid*
 
 .settings
+
+ci_cd_resources.txt

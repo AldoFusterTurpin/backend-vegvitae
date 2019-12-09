@@ -240,7 +240,34 @@ public class ProductController {
 
   @DeleteMapping("{id}")
   void deleteProductById(@PathVariable Long id) {
-    productRepository.deleteById(id);
+    //no s'implementa
+  }
+
+  @PutMapping("/{id_product}/favourites/user/{id_user}")
+  void addProductToFavourites(@PathVariable Long id_product, @PathVariable Long id_user) {
+    Product favouriteProd = productRepository.findById(id_product).orElseThrow(
+        () -> new GenericException(HttpStatus.NOT_FOUND,
+            "Cannot find product with barcode " + id_product));
+
+    User user = userRepository.findById(id_user).orElseThrow(
+        () -> new GenericException(HttpStatus.NOT_FOUND,
+            "Cannot find user with barcode " + id_user));
+
+    user.setFavouriteProduct(favouriteProd);
+    userRepository.save(user);
+  }
+
+  @DeleteMapping("/{id_product}/favourites/user/{id_user}")
+  void deleteProductFromFavourites(@PathVariable Long id_product, @PathVariable Long id_user) {
+    Product favouriteProd = productRepository.findById(id_product).orElseThrow(
+        () -> new GenericException(HttpStatus.NOT_FOUND,
+            "Cannot find product with barcode " + id_product));
+
+    User user = userRepository.findById(id_user).orElseThrow(
+        () -> new GenericException(HttpStatus.NOT_FOUND,
+            "Cannot find user with id " + id_user));
+    user.deleteFavouriteProduct(favouriteProd);
+    userRepository.save(user);
   }
 
   private Resources<Resource<Product>> getAllLinksResourcesWithAllLinks(List<Resource<Product>> p) {

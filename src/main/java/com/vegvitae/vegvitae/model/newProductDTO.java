@@ -3,6 +3,7 @@ package com.vegvitae.vegvitae.model;
 import java.util.Set;
 
 public class newProductDTO {
+
   private Long barcode;
 
   private String name;
@@ -20,7 +21,7 @@ public class newProductDTO {
   private String uploaderComment;
 
 
-  public newProductDTO(){
+  public newProductDTO() {
 
   }
 

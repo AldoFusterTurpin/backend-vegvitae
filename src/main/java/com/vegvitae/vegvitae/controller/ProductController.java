@@ -431,9 +431,9 @@ public class ProductController {
         resource.add(new Resource<>(next));
       }
       return new Resources<>(resource);
-    }
-    else {
-      throw new GenericException(HttpStatus.BAD_REQUEST, "Your token doesn't have necessary permissions to acces the request");
+    } else {
+      throw new GenericException(HttpStatus.BAD_REQUEST,
+          "Your token doesn't have necessary permissions to acces the request");
     }
   }
 

@@ -11,6 +11,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -74,6 +76,7 @@ public class Recipe {
   @JsonIgnore
   @Lob
   byte[] recipeImage;
+
 
   public Recipe() {
   }
@@ -196,4 +199,5 @@ public class Recipe {
     attachments.add(newImage);
   }
    */
+
 }

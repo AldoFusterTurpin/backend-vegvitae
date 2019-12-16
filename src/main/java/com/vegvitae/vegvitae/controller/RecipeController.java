@@ -26,6 +26,13 @@ import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import com.vegvitae.vegvitae.repository.ProductRepository;
+import com.vegvitae.vegvitae.repository.RecipeRepository;
+import com.vegvitae.vegvitae.repository.UserRepository;
+import javax.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +44,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api" + RecipeController.PATH)
@@ -108,9 +117,12 @@ public class RecipeController {
         () -> new GenericException(HttpStatus.NOT_FOUND,
             ExceptionMessages.RECIPE_NOT_FOUND.getErrorMessage() + id));
 
-    if (file != null) actualRecipe.setRecipeImage(file.getBytes());
-    else throw new GenericException(HttpStatus.NO_CONTENT,
-        "You cannot upload an empty file");
+    if (file != null) {
+      actualRecipe.setRecipeImage(file.getBytes());
+    } else {
+      throw new GenericException(HttpStatus.NO_CONTENT,
+          "You cannot upload an empty file");
+    }
     recipeRepository.save(actualRecipe);
   }
 
@@ -134,18 +146,23 @@ public class RecipeController {
   }
 
   @GetMapping("{id_recipe}/products")
-  public Resources<Resource<Product>> getRecipeProducts(@PathVariable Long id_recipe){
+  public Resources<Resource<Product>> getRecipeProducts(@PathVariable Long id_recipe) {
     Recipe recipe = recipeRepository.findById(id_recipe).orElseThrow(
         () -> new GenericException(HttpStatus.NOT_FOUND,
             ExceptionMessages.PRODUCT_NOT_FOUND.getErrorMessage() + id_recipe));
 
     Set<Product> productsUsed = recipe.getUsedProducts();
-    if (productsUsed.isEmpty()) throw new GenericException(HttpStatus.NOT_FOUND,"This Recipe has no products associated");
-    List<Resource<Product>> products = new ArrayList<>();
-    for (Product next : productsUsed){
-      products.add(new Resource<>(next, linkTo(methodOn(ProductController.class).getProductByBarcode(next.getBarcode())).withSelfRel()));
+    if (productsUsed.isEmpty()) {
+      throw new GenericException(HttpStatus.NOT_FOUND, "This Recipe has no products associated");
     }
-    return new Resources<>(products, linkTo(methodOn(RecipeController.class).getRecipeImages(id_recipe)).withSelfRel());
+    List<Resource<Product>> products = new ArrayList<>();
+    for (Product next : productsUsed) {
+      products.add(new Resource<>(next,
+          linkTo(methodOn(ProductController.class).getProductByBarcode(next.getBarcode()))
+              .withSelfRel()));
+    }
+    return new Resources<>(products,
+        linkTo(methodOn(RecipeController.class).getRecipeImages(id_recipe)).withSelfRel());
   }
-
 }
+

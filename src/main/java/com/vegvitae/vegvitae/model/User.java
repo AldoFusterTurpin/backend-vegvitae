@@ -9,10 +9,6 @@ import javax.persistence.*;
 import java.util.List;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-import lombok.Data;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.validator.constraints.Length;
 
 @Entity
 @Table(
@@ -47,7 +43,7 @@ public class User {
   
   @JsonIgnore
   @OneToMany(mappedBy = "user")
-  private Set<Rating> productRatings;
+  private Set<RatingProduct> productRatings;
 
   @JsonIgnore
   @Lob
@@ -59,6 +55,12 @@ public class User {
   @JoinTable(name = "user_favourite_products", joinColumns = @JoinColumn(name = "userId"), inverseJoinColumns = @JoinColumn(name = "productBarcode"))
   private Set<Product> favouriteProducts;
 
+  @JsonIgnore
+  @Column(name = "favourite_recipe")
+  @ManyToMany(cascade = CascadeType.ALL)
+  @JoinTable(name = "user_favourite_recipe", joinColumns = @JoinColumn(name = "userId"), inverseJoinColumns = @JoinColumn(name = "recipeId"))
+  private Set<Recipe> favouriteRecipes;
+
   User() {
   }
 
@@ -69,7 +71,7 @@ public class User {
     this.email = email;
     this.personalDescription = personalDescription;
     this.socialMediaLinks = socialMediaLinks;
-    this.productRatings = new HashSet<Rating>();
+    this.productRatings = new HashSet<RatingProduct>();
   }
 
   public Long getId() {
@@ -144,11 +146,11 @@ public class User {
     this.favouriteProducts.remove(productDeleted);
   }
   
-  public Set<Rating> getProductRatings() {
+  public Set<RatingProduct> getProductRatings() {
     return productRatings;
   }
 
-  public void setProductRatings(Set<Rating> productRatings) {
+  public void setProductRatings(Set<RatingProduct> productRatings) {
     this.productRatings = productRatings;
   }
 }

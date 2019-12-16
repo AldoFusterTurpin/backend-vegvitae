@@ -9,6 +9,7 @@ import static com.vegvitae.vegvitae.model.OrderTypeEnum.TODAY;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
+import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
 import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.newProductDTO;
@@ -16,12 +17,12 @@ import com.vegvitae.vegvitae.model.OrderTypeEnum;
 import com.vegvitae.vegvitae.model.Product;
 import com.vegvitae.vegvitae.model.ProductAdditionalTypeEnum;
 import com.vegvitae.vegvitae.model.ProductBaseTypeEnum;
-import com.vegvitae.vegvitae.model.Rating;
+import com.vegvitae.vegvitae.model.RatingProduct;
 import com.vegvitae.vegvitae.model.SupermarketEnum;
 import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.model.UserProductId;
 import com.vegvitae.vegvitae.repository.ProductRepository;
-import com.vegvitae.vegvitae.repository.RatingRepository;
+import com.vegvitae.vegvitae.repository.RatingProductRepository;
 import com.vegvitae.vegvitae.repository.UserRepository;
 
 import java.io.IOException;
@@ -42,6 +43,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -66,7 +68,7 @@ public class ProductController {
   private UserRepository userRepository;
 
   @Autowired
-  private RatingRepository ratingRepository;
+  private RatingProductRepository ratingProductRepository;
 
   @PostMapping(produces = "application/hal+json")
   public Resource<Product> newProduct(@Valid @RequestBody newProductDTO productDTO) {
@@ -327,13 +329,14 @@ public class ProductController {
     } else if (!userRepository.existsById(userId)) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           "User with id " + userId + " doesn't exist");
-    } else if (!ratingRepository.existsById(new UserProductId(userId, productId))) {
+    } else if (!ratingProductRepository.existsById(new UserProductId(userId, productId))) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           "The user hasn’t rated this product");
     }
 
     Map<String, Double> body = new HashMap<String, Double>();
-    body.put("rating", ratingRepository.getOne(new UserProductId(userId, productId)).getRating());
+    body.put("rating",
+        ratingProductRepository.getOne(new UserProductId(userId, productId)).getRating());
 
     Link selfLink = linkTo(methodOn(ProductController.class).getUserRating(productId, userId))
         .withSelfRel();
@@ -346,27 +349,28 @@ public class ProductController {
     Double value = body.get("value");
     User user = userRepository.getOne(userId);
     Product product = productRepository.getOne(productId);
-    Rating newRating = new Rating(user, product, value);
+    RatingProduct newRatingProduct = new RatingProduct(user, product, value);
 
     // Make the associations between the join table Rating, User and Product
-    Set<Rating> userRatings = user.getProductRatings();
-    Set<Rating> productRatings = product.getRatings();
-    if (ratingRepository.existsById(new UserProductId(userId, productId))) {
-      Rating oldRating = ratingRepository.getOne(new UserProductId(userId, productId));
+    Set<RatingProduct> userRatingProducts = user.getProductRatings();
+    Set<RatingProduct> productRatings = product.getRatingProducts();
+    if (ratingProductRepository.existsById(new UserProductId(userId, productId))) {
+      RatingProduct oldRatingProduct = ratingProductRepository
+          .getOne(new UserProductId(userId, productId));
       // Change the user product rating
-      product.changeUserRating(oldRating.getRating(), value);
-      userRatings.remove(oldRating);
-      productRatings.remove(oldRating);
-      ratingRepository.delete(oldRating);
+      product.changeUserRating(oldRatingProduct.getRating(), value);
+      userRatingProducts.remove(oldRatingProduct);
+      productRatings.remove(oldRatingProduct);
+      ratingProductRepository.delete(oldRatingProduct);
     } else {
       // Add a new user rating to Product
       product.addUserRating(value);
     }
-    userRatings.add(newRating);
-    productRatings.add(newRating);
+    userRatingProducts.add(newRatingProduct);
+    productRatings.add(newRatingProduct);
 
     // Save the entry into the join table Rating
-    ratingRepository.save(newRating);
+    ratingProductRepository.save(newRatingProduct);
 
     // Update the state of the Product entity
     productRepository.save(product);
@@ -401,5 +405,19 @@ public class ProductController {
     } else {
       throw new GenericException(HttpStatus.BAD_REQUEST, "Product has no image");
     }
+  }
+
+  @Transactional
+  @GetMapping("/sport_supplemet_products")
+  public Resources<Resource<Product>> getSportSupplementProducts(){
+    List<ProductAdditionalTypeEnum> sport = new ArrayList<>();
+    sport.add(ProductAdditionalTypeEnum.SPORTS_SUPPLEMENT);
+    System.out.println(sport);
+    List<Product> sportsProducts = productRepository.findByAdditionalTypesIn(sport);
+    List<Resource<Product>> resource = new ArrayList<>();
+    for (Product next : sportsProducts){
+      resource.add(new Resource<>(next));
+    }
+    return new Resources<>(resource);
   }
 }

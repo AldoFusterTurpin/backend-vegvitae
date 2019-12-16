@@ -54,6 +54,7 @@ public class Product {
   @DecimalMax(value = "5.0", message = "Rating has to be less than or equal to {value}.")
   private Double rating;
 
+  @JsonIgnore
   private long numRatings;
 
   @JsonIgnore
@@ -61,7 +62,7 @@ public class Product {
 
   @JsonIgnore
   @OneToMany(mappedBy = "product")
-  private Set<Rating> ratings;
+  private Set<RatingProduct> ratingProducts;
 
   @NotNull
   private Date creationDate;
@@ -88,7 +89,7 @@ public class Product {
     this.rating = 0.0;
     this.numRatings = 0;
     this.sumRatings = 0;
-    this.ratings = new HashSet<Rating>();
+    this.ratingProducts = new HashSet<RatingProduct>();
     this.creationDate = getCurrentDate();
   }
 
@@ -108,12 +109,12 @@ public class Product {
     this.name = name;
   }
 
-  public Set<Rating> getRatings() {
-    return ratings;
+  public Set<RatingProduct> getRatingProducts() {
+    return ratingProducts;
   }
 
-  public void setRatings(Set<Rating> ratings) {
-    this.ratings = ratings;
+  public void setRatingProducts(Set<RatingProduct> ratingProducts) {
+    this.ratingProducts = ratingProducts;
   }
 
   public long getNumRatings() {

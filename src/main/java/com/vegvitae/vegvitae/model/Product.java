@@ -2,6 +2,7 @@ package com.vegvitae.vegvitae.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.Calendar;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashSet;
@@ -52,7 +53,7 @@ public class Product {
   @NotNull(message = "Uploader can't be NULL.")
   private User uploader;
 
-  //@JsonIgnore
+  @JsonIgnore
   @ManyToMany
   @JoinTable(name = "reports", joinColumns = @JoinColumn(name = "productBarcode"), inverseJoinColumns = @JoinColumn(name = "userId"))
   Set<User> userReports;
@@ -106,6 +107,7 @@ public class Product {
     this.sumRatings = 0;
     this.ratingProducts = new HashSet<RatingProduct>();
     this.userReports = new HashSet<User>();
+    this.comments = new ArrayList<Comment>();
     this.creationDate = getCurrentDate();
   }
 

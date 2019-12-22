@@ -12,15 +12,18 @@ import java.util.Optional;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api" + CommentController.PRODUCT_PATH + "/{id}" + CommentController.COMMENT_PATH)
+@RequestMapping("/api" + CommentController.PRODUCT_PATH + "/{barcode}" + CommentController.COMMENT_PATH)
 public class CommentController {
 
   static final String PRODUCT_PATH = "/products";
@@ -34,14 +37,16 @@ public class CommentController {
   ProductRepository productRepository;
 
   @PostMapping
-  Comment createComment(@PathVariable Long id, @Valid @RequestBody Comment comment) {
+  Comment createComment(@PathVariable Long barcode, @Valid @RequestBody Comment comment) {
     comment.setCreationDate(new Date());
-    Optional<Product> productOpt = productRepository.findById(id);
+    Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
       List<Comment> comments = product.getComments();
       Comment newComment = commentRepository.save(comment);
       comments.add(newComment);
+      product.setComments(comments);
+      productRepository.save(product);
       return newComment;
     }
     else {
@@ -50,11 +55,60 @@ public class CommentController {
   }
 
   @GetMapping
-  List<Comment> getComments(@PathVariable Long id) {
-    Optional<Product> productOpt = productRepository.findById(id);
+  List<Comment> getComments(@PathVariable Long barcode) {
+    Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
       return product.getComments();
+    }
+    else {
+      throw new GenericException(HttpStatus.BAD_REQUEST, ExceptionMessages.PRODUCT_INVALID_BARCODE.getErrorMessage());
+    }
+  }
+
+  @PutMapping("/{id}")
+  Comment editComment(@PathVariable Long barcode, @PathVariable Long id, @Valid @RequestBody Comment commentNew) {
+    Optional<Product> productOpt = productRepository.findById(barcode);
+    if(productOpt.isPresent()) {
+      Product product = productOpt.get();
+      Optional<Comment> commentOpt = commentRepository.findById(id);
+      if(commentOpt.isPresent()) {
+        List<Comment> comments = product.getComments();
+        Comment comment = commentOpt.get();
+        comments.remove(comment);
+        comment.setText(commentNew.getText());
+        commentRepository.save(comment);
+        comments.add(comment);
+        product.setComments(comments);
+        productRepository.save(product);
+        return comment;
+      }
+      else {
+        throw new GenericException(HttpStatus.BAD_REQUEST, ExceptionMessages.COMMENT_INVALID_ID.getErrorMessage());
+      }
+    }
+    else {
+      throw new GenericException(HttpStatus.BAD_REQUEST, ExceptionMessages.PRODUCT_INVALID_BARCODE.getErrorMessage());
+    }
+  }
+  @ResponseStatus(value = HttpStatus.NO_CONTENT)
+  @DeleteMapping("/{id}")
+  void deleteComment(@PathVariable Long barcode, @PathVariable Long id) {
+    Optional<Product> productOpt = productRepository.findById(barcode);
+    if(productOpt.isPresent()) {
+      Product product = productOpt.get();
+      Optional<Comment> commentOpt = commentRepository.findById(id);
+      if(commentOpt.isPresent()) {
+        List<Comment> comments = product.getComments();
+        Comment comment = commentOpt.get();
+        comments.remove(comment);
+        commentRepository.delete(comment);
+        product.setComments(comments);
+        productRepository.save(product);
+      }
+      else {
+        throw new GenericException(HttpStatus.BAD_REQUEST, ExceptionMessages.COMMENT_INVALID_ID.getErrorMessage());
+      }
     }
     else {
       throw new GenericException(HttpStatus.BAD_REQUEST, ExceptionMessages.PRODUCT_INVALID_BARCODE.getErrorMessage());

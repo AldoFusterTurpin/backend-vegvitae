@@ -16,7 +16,9 @@ public enum ExceptionMessages {
   RECIPE_NOT_FOUND("There is no Recipe with that id: "),
   PRODUCT_NOT_FOUND("There is no product with that id: "),
   PRODUCT_INVALID_BARCODE("Product with the specified barcode doesn't exist"),
-  COMMENT_INVALID_ID("Comment with the specified id doesn't exist");
+  COMMENT_INVALID_ID("Comment with the specified id doesn't exist"),
+  COMMENT_ALREADY_VOTED("User already voted for this comment"),
+  COMMENT_NOT_VOTED("User didn't vote for this comment");
 
   private String message;
 

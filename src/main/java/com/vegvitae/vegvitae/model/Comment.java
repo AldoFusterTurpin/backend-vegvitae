@@ -32,7 +32,7 @@ public class Comment {
   private Date creationDate;
 
   @ManyToMany(fetch = FetchType.LAZY)
-  @JoinTable(name = "votes", joinColumns = @JoinColumn(name = "productId"), inverseJoinColumns = @JoinColumn(name = "userId"))
+  @JoinTable(name = "votes", joinColumns = @JoinColumn(name = "commentId"), inverseJoinColumns = @JoinColumn(name = "userId"))
   private Set<User> votesUsers;
 
   public String getText() {

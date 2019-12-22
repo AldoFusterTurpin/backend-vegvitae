@@ -7,6 +7,7 @@ import com.vegvitae.vegvitae.model.Product;
 import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.repository.CommentRepository;
 import com.vegvitae.vegvitae.repository.ProductRepository;
+import com.vegvitae.vegvitae.repository.UserRepository;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +40,9 @@ public class CommentController {
 
   @Autowired
   ProductRepository productRepository;
+
+  @Autowired
+  UserRepository userRepository;
 
   @PostMapping
   Comment createComment(@PathVariable Long barcode, @Valid @RequestBody Comment comment) {
@@ -122,9 +126,8 @@ public class CommentController {
     }
   }
 
-  @PutMapping("/{id}/vote")
-  Comment voteComment(@PathVariable Long barcode, @PathVariable Long id,
-      @Valid @RequestBody User user) {
+  @PostMapping("/{id}/vote")
+  Comment voteComment(@PathVariable Long barcode, @PathVariable Long id) {
     Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
@@ -134,13 +137,12 @@ public class CommentController {
         Comment comment = commentOpt.get();
         comments.remove(comment);
         Set<User> votes = comment.getVotesUsers();
-        if (!votes.contains(user)) {
-          votes.add(user);
-        }
-        else {
+        User user = userRepository.findById(1L).get();
+        if (votes.contains(user)) {
           throw new GenericException(HttpStatus.BAD_REQUEST,
               ExceptionMessages.COMMENT_ALREADY_VOTED.getErrorMessage());
         }
+        votes.add(user);
         comment.setVotesUsers(votes);
         commentRepository.save(comment);
         comments.add(comment);
@@ -158,8 +160,7 @@ public class CommentController {
   }
 
   @DeleteMapping("/{id}/vote")
-  Comment unvoteComment(@PathVariable Long barcode, @PathVariable Long id,
-      @Valid @RequestBody User user) {
+  Comment unvoteComment(@PathVariable Long barcode, @PathVariable Long id) {
     Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
@@ -169,13 +170,13 @@ public class CommentController {
         Comment comment = commentOpt.get();
         comments.remove(comment);
         Set<User> votes = comment.getVotesUsers();
-        if (votes.contains(user)) {
-          votes.remove(user);
-        }
-        else {
+        //Fixed user until we get authentication
+        User user = userRepository.findById(1L).get();
+        if (!votes.contains(user)) {
           throw new GenericException(HttpStatus.BAD_REQUEST,
               ExceptionMessages.COMMENT_NOT_VOTED.getErrorMessage());
         }
+        votes.remove(user);
         comment.setVotesUsers(votes);
         commentRepository.save(comment);
         comments.add(comment);

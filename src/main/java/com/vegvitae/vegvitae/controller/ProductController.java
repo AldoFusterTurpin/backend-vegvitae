@@ -24,7 +24,9 @@ import com.vegvitae.vegvitae.repository.ProductRepository;
 import com.vegvitae.vegvitae.repository.RatingRepository;
 import com.vegvitae.vegvitae.repository.UserRepository;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,6 +41,7 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +51,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api" + ProductController.PATH)
@@ -91,7 +95,7 @@ public class ProductController {
       @RequestParam(name = "user", required = false) Long userId) {
 
     Comparator<Product> comparator = null;
-    if(orderBy != null) {
+    if (orderBy != null) {
       switch (orderBy) {
         case TODAY:
           Calendar calendar = Calendar.getInstance();
@@ -129,8 +133,7 @@ public class ProductController {
               .reversed();
           break;
       }
-    }
-    else {
+    } else {
       comparator = Comparator.comparing(Product::getRating);
     }
 
@@ -316,16 +319,15 @@ public class ProductController {
   }
 
   @GetMapping("/{productId}/users/{userId}/rating")
-  public Resource<Map<String, Double>> getUserRating(@PathVariable Long productId, @PathVariable Long userId) {
+  public Resource<Map<String, Double>> getUserRating(@PathVariable Long productId,
+      @PathVariable Long userId) {
     if (!productRepository.existsById(productId)) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           "Product with id " + productId + " doesn't exist");
-    }
-    else if (!userRepository.existsById(userId)) {
+    } else if (!userRepository.existsById(userId)) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           "User with id " + userId + " doesn't exist");
-    }
-    else if (!ratingRepository.existsById(new UserProductId(userId, productId))) {
+    } else if (!ratingRepository.existsById(new UserProductId(userId, productId))) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           "The user hasn’t rated this product");
     }
@@ -356,8 +358,7 @@ public class ProductController {
       userRatings.remove(oldRating);
       productRatings.remove(oldRating);
       ratingRepository.delete(oldRating);
-    }
-    else {
+    } else {
       // Add a new user rating to Product
       product.addUserRating(value);
     }
@@ -373,8 +374,32 @@ public class ProductController {
     // Update the state of the User entity
     userRepository.save(user);
 
-    Link selfLink = linkTo(methodOn(ProductController.class).addRating(productId, userId, new HashMap<String, Double>()))
+    Link selfLink = linkTo(methodOn(ProductController.class)
+        .addRating(productId, userId, new HashMap<String, Double>()))
         .withSelfRel();
     return new Resource<Product>(product, selfLink);
+  }
+
+  @PutMapping("{barcode}/image")
+  void uploadUserImage(@PathVariable Long barcode,
+      @RequestParam("image") MultipartFile image) throws IOException {
+    Product product = productRepository.findById(barcode)
+        .orElseThrow(
+            () -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the product"));
+    product.setImage(image.getBytes());
+    productRepository.save(product);
+  }
+
+  @GetMapping("{barcode}/image")
+  ResponseEntity<byte[]> getUserImage(@PathVariable Long barcode) {
+    Product product = productRepository.findById(barcode)
+        .orElseThrow(
+            () -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the product"));
+    if (product.getImage() != null) {
+      byte[] imageBytes = product.getImage();
+      return new ResponseEntity<>(Base64.getEncoder().encode(imageBytes), HttpStatus.OK);
+    } else {
+      throw new GenericException(HttpStatus.BAD_REQUEST, "Product has no image");
+    }
   }
 }

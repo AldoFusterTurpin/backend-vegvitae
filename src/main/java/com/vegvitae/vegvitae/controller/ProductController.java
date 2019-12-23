@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -409,15 +410,44 @@ public class ProductController {
 
   @Transactional
   @GetMapping("/sport_supplemet_products")
-  public Resources<Resource<Product>> getSportSupplementProducts(){
+  public Resources<Resource<Product>> getSportSupplementProducts() {
     List<ProductAdditionalTypeEnum> sport = new ArrayList<>();
     sport.add(ProductAdditionalTypeEnum.SPORTS_SUPPLEMENT);
     System.out.println(sport);
     List<Product> sportsProducts = productRepository.findByAdditionalTypesIn(sport);
     List<Resource<Product>> resource = new ArrayList<>();
-    for (Product next : sportsProducts){
+    for (Product next : sportsProducts) {
       resource.add(new Resource<>(next));
     }
     return new Resources<>(resource);
+  }
+
+  @PostMapping("{barcode}/report")
+  void reportProduct(@RequestBody final Long userId, @PathVariable Long barcode) {
+    Optional<Product> productOpt = productRepository.findById(barcode);
+    if (productOpt.isPresent()) {
+      Product product = productOpt.get();
+      Optional<User> userOpt = userRepository.findById(userId);
+      if (userOpt.isPresent()) {
+        User user = userOpt.get();
+        Set<User> usersReports = product.getUserReports();
+        if (usersReports.contains(user)) {
+          throw new GenericException(HttpStatus.BAD_REQUEST,
+              "This user already reported this product");
+        }
+        usersReports.add(user);
+        product.setUserReports(usersReports);
+        if (usersReports.size() >= 10) {
+          productRepository.deleteByBarcode(barcode);
+          return;
+        }
+        productRepository.save(product);
+        return;
+      } else {
+        throw new GenericException(HttpStatus.BAD_REQUEST, "The specified user doesn't exist");
+      }
+    } else {
+      throw new GenericException(HttpStatus.BAD_REQUEST, "The specified product doesn't exist");
+    }
   }
 }

@@ -11,6 +11,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -46,6 +48,12 @@ public class Product {
   @JoinColumn(name = "uploader_id")
   @NotNull(message = "Uploader can't be NULL.")
   private User uploader;
+
+  //@JsonIgnore
+  @ManyToMany
+  @JoinTable(name = "reports", joinColumns = @JoinColumn(name = "productBarcode"), inverseJoinColumns = @JoinColumn(name = "userId"))
+  Set<User> userReports;
+
 
   @Size(max = 160, message = "The uploader comment has to be smaller than {max} characters.")
   private String uploaderComment;
@@ -90,6 +98,7 @@ public class Product {
     this.numRatings = 0;
     this.sumRatings = 0;
     this.ratingProducts = new HashSet<RatingProduct>();
+    this.userReports = new HashSet<User>();
     this.creationDate = getCurrentDate();
   }
 
@@ -137,7 +146,7 @@ public class Product {
     this.rating = rating;
   }
 
-  public Double getRating(){
+  public Double getRating() {
     return rating;
   }
 
@@ -147,7 +156,7 @@ public class Product {
     rating = sumRatings / numRatings;
   }
 
-  public void changeUserRating(Double oldValue, Double newValue){
+  public void changeUserRating(Double oldValue, Double newValue) {
     sumRatings += newValue - oldValue;
     rating = sumRatings / numRatings;
   }
@@ -214,6 +223,14 @@ public class Product {
 
   public void setImage(byte[] image) {
     this.image = image;
+  }
+
+  public Set<User> getUserReports() {
+    return userReports;
+  }
+
+  public void setUserReports(Set<User> userReports) {
+    this.userReports = userReports;
   }
 
   private Date getCurrentDate() {

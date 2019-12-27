@@ -56,8 +56,14 @@ public class Recipe {
   private double sumRatings;
 
   @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-  @JoinTable(name = "comments", joinColumns = @JoinColumn(name = "productBarcode"), inverseJoinColumns = @JoinColumn(name = "commentId"))
+  @JoinTable(name = "recipeComments", joinColumns = @JoinColumn(name = "recipeId"), inverseJoinColumns = @JoinColumn(name = "recipeCommentId"))
   List<RecipeComment> comments;
+
+  @JsonIgnore
+  @ManyToMany
+  @JoinTable(name = "reportsRecipe", joinColumns = @JoinColumn(name = "idRecipe"), inverseJoinColumns = @JoinColumn(name = "userId"))
+  Set<User> userReports;
+
 
 
   /*
@@ -213,5 +219,13 @@ public class Recipe {
 
   public void setComments(List<RecipeComment> comments) {
     this.comments = comments;
+  }
+
+  public Set<User> getUserReports() {
+    return userReports;
+  }
+
+  public void setUserReports(Set<User> userReports) {
+    this.userReports = userReports;
   }
 }

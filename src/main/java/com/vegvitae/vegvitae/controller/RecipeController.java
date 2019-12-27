@@ -26,9 +26,12 @@ import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.repository.ProductRepository;
 import com.vegvitae.vegvitae.repository.RecipeRepository;
 import com.vegvitae.vegvitae.repository.UserRepository;
+import java.util.Optional;
+import java.util.Set;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -164,5 +167,35 @@ public class RecipeController {
     return new Resources<>(products,
         linkTo(methodOn(RecipeController.class).getRecipeImages(id_recipe)).withSelfRel());
   }
+
+  @PostMapping("{recipeId}/report")
+  void reportProduct(@RequestBody final Long userId, @PathVariable Long recipeId) {
+    Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
+    if (recipeOpt.isPresent()) {
+      Recipe recipe = recipeOpt.get();
+      Optional<User> userOpt = userRepository.findById(userId);
+      if (userOpt.isPresent()) {
+        User user = userOpt.get();
+        Set<User> usersReports = recipe.getUserReports();
+        if (usersReports.contains(user)) {
+          throw new GenericException(HttpStatus.BAD_REQUEST,
+              "This user already reported this product");
+        }
+        usersReports.add(user);
+        recipe.setUserReports(usersReports);
+        if (usersReports.size() >= 2) {
+          recipeRepository.deleteById(recipeId);
+          return;
+        }
+        recipeRepository.save(recipe);
+        return;
+      } else {
+        throw new GenericException(HttpStatus.BAD_REQUEST, "The specified user doesn't exist");
+      }
+    } else {
+      throw new GenericException(HttpStatus.BAD_REQUEST, "The specified product doesn't exist");
+    }
+  }
+  
 }
 

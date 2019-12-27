@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.sql.Date;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
@@ -13,10 +14,12 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -51,6 +54,11 @@ public class Recipe {
 
   @JsonIgnore
   private double sumRatings;
+
+  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinTable(name = "comments", joinColumns = @JoinColumn(name = "productBarcode"), inverseJoinColumns = @JoinColumn(name = "commentId"))
+  List<RecipeComment> comments;
+
 
   /*
   @JsonIgnore
@@ -199,5 +207,11 @@ public class Recipe {
     attachments.add(newImage);
   }
    */
+  public List<RecipeComment> getComments() {
+    return comments;
+  }
 
+  public void setComments(List<RecipeComment> comments) {
+    this.comments = comments;
+  }
 }

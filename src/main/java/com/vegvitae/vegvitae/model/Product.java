@@ -2,17 +2,15 @@ package com.vegvitae.vegvitae.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.sql.Date;
-import java.util.ArrayList;
 import java.util.Calendar;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -67,6 +65,10 @@ public class Product {
 
   @NotNull
   private Date creationDate;
+
+  @JsonIgnore
+  @Lob
+  private byte[] image;
 
   public Product() {
   }
@@ -203,6 +205,14 @@ public class Product {
 
   public void setUploaderComment(String uploaderComment) {
     this.uploaderComment = uploaderComment;
+  }
+
+  public byte[] getImage() {
+    return image;
+  }
+
+  public void setImage(byte[] image) {
+    this.image = image;
   }
 
   private Date getCurrentDate() {

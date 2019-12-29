@@ -2,12 +2,16 @@ package com.vegvitae.vegvitae.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.Calendar;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
@@ -49,7 +53,7 @@ public class Product {
   @NotNull(message = "Uploader can't be NULL.")
   private User uploader;
 
-  //@JsonIgnore
+  @JsonIgnore
   @ManyToMany
   @JoinTable(name = "reports", joinColumns = @JoinColumn(name = "productBarcode"), inverseJoinColumns = @JoinColumn(name = "userId"))
   Set<User> userReports;
@@ -79,6 +83,10 @@ public class Product {
   @Lob
   private byte[] image;
 
+  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinTable(name = "comments", joinColumns = @JoinColumn(name = "productBarcode"), inverseJoinColumns = @JoinColumn(name = "commentId"))
+  List<Comment> comments;
+
   public Product() {
   }
 
@@ -99,6 +107,7 @@ public class Product {
     this.sumRatings = 0;
     this.ratingProducts = new HashSet<RatingProduct>();
     this.userReports = new HashSet<User>();
+    this.comments = new ArrayList<Comment>();
     this.creationDate = getCurrentDate();
   }
 
@@ -237,5 +246,13 @@ public class Product {
     Calendar calendar = Calendar.getInstance();
     java.util.Date currentDate = calendar.getTime();
     return new java.sql.Date(currentDate.getTime());
+  }
+
+  public List<Comment> getComments() {
+    return comments;
+  }
+
+  public void setComments(List<Comment> comments) {
+    this.comments = comments;
   }
 }

@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -57,7 +58,10 @@ public class RecipeController {
 
   @PostMapping()
   @ResponseStatus(HttpStatus.CREATED)
-  public Resource<Recipe> newRecipe(@Valid @RequestBody Recipe newRecipe) {
+  public Resource<Recipe> newRecipe(@Valid @RequestBody Recipe newRecipe, @RequestHeader("token") String token) {
+    newRecipe.setCreator(userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage())));
     if (!userRepository.findById(newRecipe.getCreator().getId()).isPresent()) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           ExceptionMessages.USER_NOT_FOUND.getErrorMessage() + newRecipe.getId());

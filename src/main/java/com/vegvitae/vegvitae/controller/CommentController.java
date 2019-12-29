@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,9 +46,13 @@ public class CommentController {
   UserRepository userRepository;
 
   @PostMapping
-  Comment createComment(@PathVariable Long barcode, @Valid @RequestBody Comment comment) {
+  Comment createComment(@PathVariable Long barcode, @Valid @RequestBody Comment comment,
+      @RequestHeader("token") String token) {
     comment.setCreationDate(new Date());
     comment.setVotesUsers(new HashSet<>());
+    comment.setAuthor(userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage())));
     Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
@@ -77,14 +82,21 @@ public class CommentController {
 
   @PutMapping("/{id}")
   Comment editComment(@PathVariable Long barcode, @PathVariable Long id,
-      @Valid @RequestBody Comment commentNew) {
+      @Valid @RequestBody Comment commentNew, @RequestHeader("token") String token) {
     Optional<Product> productOpt = productRepository.findById(barcode);
+    User user = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
       Optional<Comment> commentOpt = commentRepository.findById(id);
       if (commentOpt.isPresent()) {
         List<Comment> comments = product.getComments();
         Comment comment = commentOpt.get();
+        if (!comment.getAuthor().equals(user)) {
+          throw new GenericException(HttpStatus.BAD_REQUEST,
+              ExceptionMessages.INVALID_COMMENT_AUTHOR.getErrorMessage());
+        }
         comments.remove(comment);
         comment.setText(commentNew.getText());
         commentRepository.save(comment);
@@ -104,14 +116,22 @@ public class CommentController {
 
   @ResponseStatus(value = HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
-  void deleteComment(@PathVariable Long barcode, @PathVariable Long id) {
+  void deleteComment(@PathVariable Long barcode, @PathVariable Long id,
+      @RequestHeader("token") String token) {
     Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
       Optional<Comment> commentOpt = commentRepository.findById(id);
+      User user = userRepository.findByToken(token).orElseThrow(
+          () -> new GenericException(HttpStatus.BAD_REQUEST,
+              ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
       if (commentOpt.isPresent()) {
         List<Comment> comments = product.getComments();
         Comment comment = commentOpt.get();
+        if (!comment.getAuthor().equals(user)) {
+          throw new GenericException(HttpStatus.BAD_REQUEST,
+              ExceptionMessages.INVALID_COMMENT_AUTHOR.getErrorMessage());
+        }
         comments.remove(comment);
         commentRepository.delete(comment);
         product.setComments(comments);
@@ -127,7 +147,8 @@ public class CommentController {
   }
 
   @PostMapping("/{id}/vote")
-  Comment voteComment(@PathVariable Long barcode, @PathVariable Long id) {
+  Comment voteComment(@PathVariable Long barcode, @PathVariable Long id,
+      @RequestHeader("token") String token) {
     Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
@@ -137,7 +158,9 @@ public class CommentController {
         Comment comment = commentOpt.get();
         comments.remove(comment);
         Set<User> votes = comment.getVotesUsers();
-        User user = userRepository.findById(1L).get();
+        User user = userRepository.findByToken(token).orElseThrow(
+            () -> new GenericException(HttpStatus.BAD_REQUEST,
+                ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
         if (votes.contains(user)) {
           throw new GenericException(HttpStatus.BAD_REQUEST,
               ExceptionMessages.COMMENT_ALREADY_VOTED.getErrorMessage());
@@ -160,7 +183,8 @@ public class CommentController {
   }
 
   @DeleteMapping("/{id}/vote")
-  Comment unvoteComment(@PathVariable Long barcode, @PathVariable Long id) {
+  Comment unvoteComment(@PathVariable Long barcode, @PathVariable Long id,
+      @RequestHeader("token") String token) {
     Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
@@ -171,7 +195,9 @@ public class CommentController {
         comments.remove(comment);
         Set<User> votes = comment.getVotesUsers();
         //Fixed user until we get authentication
-        User user = userRepository.findById(1L).get();
+        User user = userRepository.findByToken(token).orElseThrow(
+            () -> new GenericException(HttpStatus.BAD_REQUEST,
+                ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
         if (!votes.contains(user)) {
           throw new GenericException(HttpStatus.BAD_REQUEST,
               ExceptionMessages.COMMENT_NOT_VOTED.getErrorMessage());

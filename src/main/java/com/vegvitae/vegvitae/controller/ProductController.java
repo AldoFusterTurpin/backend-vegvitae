@@ -9,7 +9,6 @@ import static com.vegvitae.vegvitae.model.OrderTypeEnum.TODAY;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
 import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.newProductDTO;
@@ -51,6 +50,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -72,7 +72,8 @@ public class ProductController {
   private RatingProductRepository ratingProductRepository;
 
   @PostMapping(produces = "application/hal+json")
-  public Resource<Product> newProduct(@Valid @RequestBody newProductDTO productDTO) {
+  public Resource<Product> newProduct(@Valid @RequestBody newProductDTO productDTO,
+      @RequestHeader("token") String token) {
 
     if (productRepository.existsById(productDTO.getBarcode())) {
       throw new GenericException(HttpStatus.CONFLICT,
@@ -80,7 +81,9 @@ public class ProductController {
     }
 
     // Creating an instance of Product with the content of the DTO
-    User uploader = userRepository.getOne(productDTO.getUploaderId());
+    User uploader = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
     Product product = new Product(productDTO.getBarcode(), productDTO.getName(),
         productDTO.getBaseType(), productDTO.getAdditionalTypes(),
         productDTO.getSupermarketsAvailable(), productDTO.getShop(), uploader,
@@ -249,29 +252,30 @@ public class ProductController {
     //no s'implementa
   }
 
-  @PutMapping("/{id_product}/favourites/user/{id_user}")
-  void addProductToFavourites(@PathVariable Long id_product, @PathVariable Long id_user) {
+  @PutMapping("/{id_product}/favourites")
+  void addProductToFavourites(@PathVariable Long id_product, @RequestHeader("token") String token) {
     Product favouriteProd = productRepository.findById(id_product).orElseThrow(
         () -> new GenericException(HttpStatus.NOT_FOUND,
             "Cannot find product with barcode " + id_product));
 
-    User user = userRepository.findById(id_user).orElseThrow(
-        () -> new GenericException(HttpStatus.NOT_FOUND,
-            "Cannot find user with barcode " + id_user));
+    User user = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
 
     user.setFavouriteProduct(favouriteProd);
     userRepository.save(user);
   }
 
-  @DeleteMapping("/{id_product}/favourites/user/{id_user}")
-  void deleteProductFromFavourites(@PathVariable Long id_product, @PathVariable Long id_user) {
+  @DeleteMapping("/{id_product}/favourites")
+  void deleteProductFromFavourites(@PathVariable Long id_product,
+      @RequestHeader("token") String token) {
     Product favouriteProd = productRepository.findById(id_product).orElseThrow(
         () -> new GenericException(HttpStatus.NOT_FOUND,
             "Cannot find product with barcode " + id_product));
 
-    User user = userRepository.findById(id_user).orElseThrow(
-        () -> new GenericException(HttpStatus.NOT_FOUND,
-            "Cannot find user with id " + id_user));
+    User user = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
     user.deleteFavouriteProduct(favouriteProd);
     userRepository.save(user);
   }
@@ -321,43 +325,48 @@ public class ProductController {
     return new Resource<Map<String, Double>>(body, selfLink);
   }
 
-  @GetMapping("/{productId}/users/{userId}/rating")
+  @GetMapping("/{productId}/userRating")
   public Resource<Map<String, Double>> getUserRating(@PathVariable Long productId,
-      @PathVariable Long userId) {
+      @RequestHeader("token") String token) {
     if (!productRepository.existsById(productId)) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           "Product with id " + productId + " doesn't exist");
-    } else if (!userRepository.existsById(userId)) {
-      throw new GenericException(HttpStatus.NOT_FOUND,
-          "User with id " + userId + " doesn't exist");
-    } else if (!ratingProductRepository.existsById(new UserProductId(userId, productId))) {
+    }
+    User user = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+    if (!ratingProductRepository.existsById(new UserProductId(user.getId(), productId))) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           "The user hasn’t rated this product");
     }
 
     Map<String, Double> body = new HashMap<String, Double>();
     body.put("rating",
-        ratingProductRepository.getOne(new UserProductId(userId, productId)).getRating());
+        ratingProductRepository.getOne(new UserProductId(user.getId(), productId)).getRating());
 
-    Link selfLink = linkTo(methodOn(ProductController.class).getUserRating(productId, userId))
+    Link selfLink = linkTo(
+        methodOn(ProductController.class).getUserRating(productId, user.getId().toString()))
         .withSelfRel();
     return new Resource<Map<String, Double>>(body, selfLink);
   }
 
-  @PutMapping("/{productId}/users/{userId}/rating")
-  public Resource<Product> addRating(@PathVariable Long productId, @PathVariable Long userId,
+  @PutMapping("/{productId}/rating")
+  public Resource<Product> addRating(@PathVariable Long productId,
+      @RequestHeader("token") String token,
       @RequestBody Map<String, Double> body) {
     Double value = body.get("value");
-    User user = userRepository.getOne(userId);
+    User user = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
     Product product = productRepository.getOne(productId);
     RatingProduct newRatingProduct = new RatingProduct(user, product, value);
 
     // Make the associations between the join table Rating, User and Product
     Set<RatingProduct> userRatingProducts = user.getProductRatings();
     Set<RatingProduct> productRatings = product.getRatingProducts();
-    if (ratingProductRepository.existsById(new UserProductId(userId, productId))) {
+    if (ratingProductRepository.existsById(new UserProductId(user.getId(), productId))) {
       RatingProduct oldRatingProduct = ratingProductRepository
-          .getOne(new UserProductId(userId, productId));
+          .getOne(new UserProductId(user.getId(), productId));
       // Change the user product rating
       product.changeUserRating(oldRatingProduct.getRating(), value);
       userRatingProducts.remove(oldRatingProduct);
@@ -380,13 +389,13 @@ public class ProductController {
     userRepository.save(user);
 
     Link selfLink = linkTo(methodOn(ProductController.class)
-        .addRating(productId, userId, new HashMap<String, Double>()))
+        .addRating(productId, user.getId().toString(), new HashMap<String, Double>()))
         .withSelfRel();
     return new Resource<Product>(product, selfLink);
   }
 
   @PutMapping("{barcode}/image")
-  void uploadUserImage(@PathVariable Long barcode,
+  void uploadProductImage(@PathVariable Long barcode,
       @RequestParam("image") MultipartFile image) throws IOException {
     Product product = productRepository.findById(barcode)
         .orElseThrow(
@@ -396,7 +405,7 @@ public class ProductController {
   }
 
   @GetMapping("{barcode}/image")
-  ResponseEntity<byte[]> getUserImage(@PathVariable Long barcode) {
+  ResponseEntity<byte[]> getProductImage(@PathVariable Long barcode) {
     Product product = productRepository.findById(barcode)
         .orElseThrow(
             () -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the product"));
@@ -410,42 +419,45 @@ public class ProductController {
 
   @Transactional
   @GetMapping("/sport_supplemet_products")
-  public Resources<Resource<Product>> getSportSupplementProducts() {
-    List<ProductAdditionalTypeEnum> sport = new ArrayList<>();
-    sport.add(ProductAdditionalTypeEnum.SPORTS_SUPPLEMENT);
-    System.out.println(sport);
-    List<Product> sportsProducts = productRepository.findByAdditionalTypesIn(sport);
-    List<Resource<Product>> resource = new ArrayList<>();
-    for (Product next : sportsProducts) {
-      resource.add(new Resource<>(next));
+  public Resources<Resource<Product>> getSportSupplementProducts(
+      @RequestHeader("token") String token) {
+    if (token.equals("sport")) {
+      List<ProductAdditionalTypeEnum> sport = new ArrayList<>();
+      sport.add(ProductAdditionalTypeEnum.SPORTS_SUPPLEMENT);
+      System.out.println(sport);
+      List<Product> sportsProducts = productRepository.findByAdditionalTypesIn(sport);
+      List<Resource<Product>> resource = new ArrayList<>();
+      for (Product next : sportsProducts) {
+        resource.add(new Resource<>(next));
+      }
+      return new Resources<>(resource);
     }
-    return new Resources<>(resource);
+    else {
+      throw new GenericException(HttpStatus.BAD_REQUEST, "Your token doesn't have necessary permissions to acces the request");
+    }
   }
 
   @PostMapping("{barcode}/report")
-  void reportProduct(@RequestBody final Long userId, @PathVariable Long barcode) {
+  void reportProduct(@RequestHeader("token") String token, @PathVariable Long barcode) {
     Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
-      Optional<User> userOpt = userRepository.findById(userId);
-      if (userOpt.isPresent()) {
-        User user = userOpt.get();
-        Set<User> usersReports = product.getUserReports();
-        if (usersReports.contains(user)) {
-          throw new GenericException(HttpStatus.BAD_REQUEST,
-              "This user already reported this product");
-        }
-        usersReports.add(user);
-        product.setUserReports(usersReports);
-        if (usersReports.size() >= 10) {
-          productRepository.deleteByBarcode(barcode);
-          return;
-        }
-        productRepository.save(product);
-        return;
-      } else {
-        throw new GenericException(HttpStatus.BAD_REQUEST, "The specified user doesn't exist");
+      User user = userRepository.findByToken(token).orElseThrow(
+          () -> new GenericException(HttpStatus.BAD_REQUEST,
+              ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+      Set<User> usersReports = product.getUserReports();
+      if (usersReports.contains(user)) {
+        throw new GenericException(HttpStatus.BAD_REQUEST,
+            "This user already reported this product");
       }
+      usersReports.add(user);
+      product.setUserReports(usersReports);
+      if (usersReports.size() >= 10) {
+        productRepository.deleteByBarcode(barcode);
+        return;
+      }
+      productRepository.save(product);
+      return;
     } else {
       throw new GenericException(HttpStatus.BAD_REQUEST, "The specified product doesn't exist");
     }

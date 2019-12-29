@@ -32,6 +32,8 @@ public class User {
   @Email
   private String email;
 
+  private String token;
+
   private String personalDescription;
 
   @ElementCollection
@@ -152,5 +154,13 @@ public class User {
 
   public void setProductRatings(Set<RatingProduct> productRatings) {
     this.productRatings = productRatings;
+  }
+
+  public String getToken() {
+    return token;
+  }
+
+  public void setToken(String token) {
+    this.token = token;
   }
 }

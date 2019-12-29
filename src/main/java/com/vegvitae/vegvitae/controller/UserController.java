@@ -35,7 +35,7 @@ class UserController {
   @Autowired
   private UserRepository userRepository;
 
-  @GetMapping
+  @GetMapping()
   Resources<Resource<User>> getAllUsers() {
 
     List<Resource<User>> users = userRepository.findAll().stream()
@@ -84,6 +84,10 @@ class UserController {
     createNewUser.setPassword(
         Hashing.sha256().hashString(createNewUser.getPassword(), StandardCharsets.UTF_8)
             .toString());
+    createNewUser.setToken(Hashing.sha256().hashString(
+        createNewUser.getPassword() + createNewUser.getEmail() + createNewUser.getUsername(),
+        StandardCharsets.UTF_8)
+        .toString());
     userRepository.save(createNewUser);
     return new Resource<>(createNewUser,
         linkTo(methodOn(UserController.class).getUserById(createNewUser.getId())).withSelfRel());
@@ -158,9 +162,14 @@ class UserController {
   }
 
   @PutMapping("{id}")
-  Resource<User> replaceUserById(@Valid @RequestBody User newUser, @PathVariable Long id) {
+  Resource<User> replaceUserById(@Valid @RequestBody User newUser, @PathVariable Long id,
+      @RequestHeader("token") String token) {
     User replacedUser = userRepository.findById(id)
         .map(user -> {
+          if (!user.getToken().equals(token)) {
+            throw new GenericException(HttpStatus.BAD_REQUEST,
+                ExceptionMessages.INVALID_TOKEN.getErrorMessage());
+          }
           if (!newUser.getUsername().equals(user.getUsername())
               && userRepository.findByUsername(newUser.getUsername()) != null) {
             throw new GenericException(HttpStatus.BAD_REQUEST,
@@ -190,6 +199,10 @@ class UserController {
                   .toString());
           user.setPersonalDescription(newUser.getPersonalDescription());
           user.setSocialMediaLinks(newUser.getSocialMediaLinks());
+          user.setToken(Hashing.sha256().hashString(
+              user.getPassword() + user.getEmail() + user.getUsername(),
+              StandardCharsets.UTF_8)
+              .toString());
           return userRepository.save(user);
         }).get();
     Resource resource = new Resource<>(replacedUser,

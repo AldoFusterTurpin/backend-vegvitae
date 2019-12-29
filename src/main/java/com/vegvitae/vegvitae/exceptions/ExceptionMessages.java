@@ -10,7 +10,10 @@ public enum ExceptionMessages {
   INVALID_DESCRIPTION("The personal description must be shorter than 160 characters"),
   INVALID_SOCIAL_MEDIA_LINKS_LENGTH("Social media links limit exceeded. Maximum is 4"),
   INVALID_CREDENTIALS("Credentials are not correct. Try again"),
-  PRODUCT_EXISTS("There is already a product with this barcode.");
+  PRODUCT_EXISTS("There is already a product with this barcode:"),
+  USER_NOT_FOUND("There is no username with that id: "),
+  RECIPE_NOT_FOUND("There is no Recipe with that id: "),
+  PRODUCT_NOT_FOUND("There is no product with that id: ");
 
   private String message;
 

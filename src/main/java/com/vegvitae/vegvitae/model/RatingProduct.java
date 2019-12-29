@@ -12,8 +12,8 @@ import javax.validation.constraints.DecimalMin;
 
 /** Join table for product ratings **/
 @Entity
-@Table(name = "ratings")
-public class Rating {
+@Table(name = "ratingsProduct")
+public class RatingProduct {
 
   @EmbeddedId
   private UserProductId id;
@@ -31,10 +31,10 @@ public class Rating {
   @DecimalMax(value = "5.0", message = "Rating has to be less than or equal to {value}.")
   private Double rating;
 
-  public Rating() {
+  public RatingProduct() {
   }
 
-  public Rating(User user, Product product, Double rating) {
+  public RatingProduct(User user, Product product, Double rating) {
     this.id = new UserProductId(user.getId(), product.getBarcode());
     this.user = user;
     this.product = product;
@@ -81,11 +81,11 @@ public class Rating {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Rating rating = (Rating) o;
-    return Double.compare(rating.rating, this.rating) == 0 &&
-        id.equals(rating.id) &&
-        user.equals(rating.user) &&
-        product.equals(rating.product);
+    RatingProduct ratingProduct = (RatingProduct) o;
+    return Double.compare(ratingProduct.rating, this.rating) == 0 &&
+        id.equals(ratingProduct.id) &&
+        user.equals(ratingProduct.user) &&
+        product.equals(ratingProduct.product);
   }
 
   @Override

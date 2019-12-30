@@ -1,7 +1,7 @@
+image: maven:latest
+
 stages:
-  - build
   - test
-  - deploy
 
 # name of the job.
 maven_build:
@@ -16,5 +16,5 @@ maven_build:
     - maven
   # If any of the commands returns a non zero exit code the job fails.
   script:
-    - echo "Building project with maven"
+    - echo "Building and testing project with maven"
     - mvn verify

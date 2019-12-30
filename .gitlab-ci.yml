@@ -1,20 +1,20 @@
 image: maven:latest
 
-stages:
-  - test
+variables:
+  MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
 
-# name of the job.
-maven_build:
-  # A job is always executed within a stage.
-  # If no stage is set, it defaults to 'test'.
-  stage: test
-  # Since we require Maven for this job,
-  # we can restrict the job to runners with a certain tag.
-  # Of course, it is our duty to actually configure a runner
-  # with the tag 'maven' and a working maven installation
-  tags:
-    - maven
-  # If any of the commands returns a non zero exit code the job fails.
+cache:
+  paths:
+    - .m2/repository/
+    - target/
+
+build:
+  stage: build
   script:
-    - echo "Building and testing project with maven"
-    - mvn verify
+    - mvn $MAVEN_CLI_OPTS compile
+
+test:
+  stage: test
+  script:
+    - mvn $MAVEN_CLI_OPTS test

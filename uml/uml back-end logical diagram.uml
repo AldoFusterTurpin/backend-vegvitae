@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement />
+  <nodes>
+    <node x="0.0" y="479.0">com.vegvitae.vegvitae.exceptions.UserNotFoundException</node>
+    <node x="324.0" y="0.0">com.vegvitae.vegvitae.controller.UserController</node>
+    <node x="0.0" y="0.0">com.vegvitae.vegvitae.model.User</node>
+    <node x="280.0" y="479.0">com.vegvitae.vegvitae.MainApplication</node>
+    <node x="0.0" y="383.0">com.vegvitae.vegvitae.exceptions.UserNotFoundAdvice</node>
+  </nodes>
+  <notes />
+  <edges />
+  <settings layout="Hierarchic Group" zoom="0.66429418742586" x="369.0" y="401.5" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Methods</Category>
+    <Category>Constructors</Category>
+    <Category>Fields</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>packageLocal</VISIBILITY>
+</Diagram>
+

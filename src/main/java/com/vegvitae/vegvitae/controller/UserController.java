@@ -3,10 +3,14 @@ package com.vegvitae.vegvitae.controller;
 import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.Product;
+import com.vegvitae.vegvitae.model.RatingProduct;
 import com.vegvitae.vegvitae.model.User;
+import com.vegvitae.vegvitae.repository.ProductRepository;
+import com.vegvitae.vegvitae.repository.RatingProductRepository;
 import com.vegvitae.vegvitae.repository.UserRepository;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Set;
@@ -35,8 +39,14 @@ class UserController {
   @Autowired
   private UserRepository userRepository;
 
-  @GetMapping()
-  Resources<Resource<User>> getAllUsers() {
+  @Autowired
+  private RatingProductRepository ratingProductRepository;
+
+  @Autowired
+  private ProductRepository productRepository;
+
+  @GetMapping
+  public Resources<Resource<User>> getAllUsers() {
 
     List<Resource<User>> users = userRepository.findAll().stream()
         .map(user -> {
@@ -57,7 +67,7 @@ class UserController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  Resource<User> newUser(@Valid @RequestBody User createNewUser) {
+  public Resource<User> newUser(@Valid @RequestBody User createNewUser) {
     if (userRepository.findByUsername(createNewUser.getUsername()) != null) {
       throw new GenericException(HttpStatus.BAD_REQUEST,
           ExceptionMessages.USERNAME_IN_USE.getErrorMessage());
@@ -94,7 +104,7 @@ class UserController {
   }
 
   @PostMapping("/login")
-  Resource<User> login(@RequestBody Map<String, String> userData) {
+  public Resource<User> login(@RequestBody Map<String, String> userData) {
     if (!userData.containsKey("username") || userData.get("username").length() <= 0) {
       throw new GenericException(HttpStatus.BAD_REQUEST,
           ExceptionMessages.NULL_USERNAME.getErrorMessage());
@@ -124,8 +134,8 @@ class UserController {
   }
 
 
-  @GetMapping("/{id}")
-  Resource<User> getUserById(@PathVariable Long id) {
+  @GetMapping("{id}")
+  public Resource<User> getUserById(@PathVariable Long id) {
 
     User user = userRepository.findById(id)
         .orElseThrow(
@@ -141,7 +151,7 @@ class UserController {
   }
 
   @PutMapping("{id}/image")
-  void uploadUserImage(@PathVariable Long id,
+  public void uploadUserImage(@PathVariable Long id,
       @RequestParam("image") MultipartFile image) throws IOException {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the user"));
@@ -150,9 +160,10 @@ class UserController {
   }
 
   @GetMapping("{id}/image")
-  ResponseEntity<byte[]> getUserImage(@PathVariable Long id) {
+  public ResponseEntity<byte[]> getUserImage(@PathVariable Long id) {
     User user = userRepository.findById(id)
-        .orElseThrow(() -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the user"));
+        .orElseThrow(
+            () -> new GenericException(HttpStatus.BAD_REQUEST, "Couldn't find the user"));
     if (user.getImage() != null) {
       byte[] imageBytes = user.getImage();
       return new ResponseEntity<>(Base64.getEncoder().encode(imageBytes), HttpStatus.OK);
@@ -162,7 +173,7 @@ class UserController {
   }
 
   @PutMapping("{id}")
-  Resource<User> replaceUserById(@Valid @RequestBody User newUser, @PathVariable Long id,
+  public Resource<User> replaceUserById(@Valid @RequestBody User newUser, @PathVariable Long id,
       @RequestHeader("token") String token) {
     User replacedUser = userRepository.findById(id)
         .map(user -> {
@@ -215,12 +226,12 @@ class UserController {
   }
 
   @DeleteMapping("{id}")
-  void deleteUserById(@PathVariable Long id) {
+  public void deleteUserById(@PathVariable Long id) {
     userRepository.deleteById(id);
   }
 
-  @GetMapping("/{id}/favourites")
-  Resources<Set<Product>> getUserFavouriteProducts(@PathVariable Long id) {
+  @GetMapping("{id}/favourites")
+  public Resources<Set<Product>> getUserFavouriteProducts(@PathVariable Long id) {
     User actual_user = userRepository.findById(id).orElseThrow(
         () -> new GenericException(HttpStatus.BAD_REQUEST, "Cannot find user with id " + id));
 
@@ -250,5 +261,25 @@ class UserController {
       }
     }
     return (criteria[0] > 0 && criteria[1] > 0 && criteria[2] > 0);
+  }
+
+  @GetMapping("{id}/ratedProducts")
+  public Resources<Resource<Product>> getUserRatedProducts(@PathVariable Long id) {
+    User user = userRepository.findById(id).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST, "Cannot find user with id " + id));
+
+    List<RatingProduct> products = ratingProductRepository.findByUser(user);
+    List<Resource<Product>> productResource = new ArrayList<>();
+
+    for (RatingProduct next : products) {
+      Product aux = productRepository.findById(next.getProduct().getBarcode()).orElseThrow(
+          () -> new GenericException(HttpStatus.NOT_FOUND,
+              ExceptionMessages.PRODUCT_NOT_FOUND.getErrorMessage()));
+      productResource.add(new Resource<>(aux,
+          linkTo(methodOn(ProductController.class).getProductByBarcode(aux.getBarcode()))
+              .withSelfRel()));
+    }
+
+    return new Resources<>(productResource);
   }
 }

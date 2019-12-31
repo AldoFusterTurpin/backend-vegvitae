@@ -20,6 +20,7 @@ import com.vegvitae.vegvitae.model.RatingProduct;
 import com.vegvitae.vegvitae.model.SupermarketEnum;
 import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.model.UserProductId;
+import com.vegvitae.vegvitae.model.UserRecipeId;
 import com.vegvitae.vegvitae.repository.ProductRepository;
 import com.vegvitae.vegvitae.repository.RatingProductRepository;
 import com.vegvitae.vegvitae.repository.UserRepository;
@@ -318,7 +319,11 @@ public class ProductController {
     }
 
     Map<String, Double> body = new HashMap<String, Double>();
-    body.put("rating", productRepository.getOne(productId).getRating());
+    Product actualProduct = productRepository.findById(productId).orElseThrow(
+        () -> new GenericException(HttpStatus.NOT_FOUND,
+            "Product with id " + productId + " doesn't exist"));
+
+    body.put("rating", actualProduct.getRating());
 
     Link selfLink = linkTo(methodOn(ProductController.class).getProductRating(productId))
         .withSelfRel();
@@ -335,17 +340,20 @@ public class ProductController {
     User user = userRepository.findByToken(token).orElseThrow(
         () -> new GenericException(HttpStatus.BAD_REQUEST,
             ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+
     if (!ratingProductRepository.existsById(new UserProductId(user.getId(), productId))) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           "The user hasn’t rated this product");
     }
 
     Map<String, Double> body = new HashMap<String, Double>();
-    body.put("rating",
-        ratingProductRepository.getOne(new UserProductId(user.getId(), productId)).getRating());
+    Product actualProduct = productRepository.findById(productId).orElseThrow(
+        () -> new GenericException(HttpStatus.NOT_FOUND,
+            "Product with id " + productId + " doesn't exist"));
 
-    Link selfLink = linkTo(
-        methodOn(ProductController.class).getUserRating(productId, user.getId().toString()))
+    body.put("rating", actualProduct.getRating());
+
+    Link selfLink = linkTo(methodOn(ProductController.class).getUserRating(productId, token))
         .withSelfRel();
     return new Resource<Map<String, Double>>(body, selfLink);
   }
@@ -358,15 +366,16 @@ public class ProductController {
     User user = userRepository.findByToken(token).orElseThrow(
         () -> new GenericException(HttpStatus.BAD_REQUEST,
             ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
-    Product product = productRepository.getOne(productId);
+    Product product = productRepository.findById(productId).orElseThrow(
+        () -> new GenericException(HttpStatus.NOT_FOUND,
+            "Product with id " + productId + " doesn't exist"));
     RatingProduct newRatingProduct = new RatingProduct(user, product, value);
 
     // Make the associations between the join table Rating, User and Product
     Set<RatingProduct> userRatingProducts = user.getProductRatings();
     Set<RatingProduct> productRatings = product.getRatingProducts();
     if (ratingProductRepository.existsById(new UserProductId(user.getId(), productId))) {
-      RatingProduct oldRatingProduct = ratingProductRepository
-          .getOne(new UserProductId(user.getId(), productId));
+      RatingProduct oldRatingProduct = ratingProductRepository.findByUserAndProduct(user, product);
       // Change the user product rating
       product.changeUserRating(oldRatingProduct.getRating(), value);
       userRatingProducts.remove(oldRatingProduct);
@@ -424,7 +433,6 @@ public class ProductController {
     if (token.equals("sport")) {
       List<ProductAdditionalTypeEnum> sport = new ArrayList<>();
       sport.add(ProductAdditionalTypeEnum.SPORTS_SUPPLEMENT);
-      System.out.println(sport);
       List<Product> sportsProducts = productRepository.findByAdditionalTypesIn(sport);
       List<Resource<Product>> resource = new ArrayList<>();
       for (Product next : sportsProducts) {

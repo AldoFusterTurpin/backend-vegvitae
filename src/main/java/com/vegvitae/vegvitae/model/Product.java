@@ -3,8 +3,8 @@ package com.vegvitae.vegvitae.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.sql.Date;
 import java.util.ArrayList;
-import java.util.Calendar;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,7 +57,6 @@ public class Product {
   @ManyToMany
   @JoinTable(name = "reports", joinColumns = @JoinColumn(name = "productBarcode"), inverseJoinColumns = @JoinColumn(name = "userId"))
   Set<User> userReports;
-
 
   @Size(max = 160, message = "The uploader comment has to be smaller than {max} characters.")
   private String uploaderComment;

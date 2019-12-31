@@ -2,17 +2,12 @@ package com.vegvitae.vegvitae.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.annotations.ApiModelProperty;
 import java.sql.Date;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.CascadeType;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -25,9 +20,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.DecimalMax;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Entity
@@ -45,8 +37,6 @@ public class Recipe {
   @JoinColumn(name = "creator_id")
   private User creator;
 
-  @DecimalMin(value = "0.0", message = "Rating has to be at least {value}.")
-  @DecimalMax(value = "5.0", message = "Rating has to be less than or equal to {value}.")
   private Double rating;
 
   @JsonIgnore
@@ -64,33 +54,22 @@ public class Recipe {
   @JoinTable(name = "reportsRecipe", joinColumns = @JoinColumn(name = "idRecipe"), inverseJoinColumns = @JoinColumn(name = "userId"))
   Set<User> userReports;
 
-
-
-  /*
   @JsonIgnore
   @OneToMany(mappedBy = "recipe")
-  private Set<RatingRecipe> ratingRecipe;
-  */
+  private Set<RatingRecipe> ratingRecipes;
 
   private Date creationDate;
 
   @NotNull
   private String process;
 
-  @ElementCollection
   @ManyToMany
+  @JoinColumn(name = "product_id")
   private Set<Product> usedProducts;
 
-  /*
-    @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "recipe")
-    private Set<UploadedFile> attachments;
-     */
   @JsonIgnore
   @Lob
-  byte[] recipeImage;
-
+  private byte[] recipeImage;
 
   public Recipe() {
   }
@@ -108,7 +87,7 @@ public class Recipe {
     this.rating = 0.0;
     this.numRatings = 0;
     this.sumRatings = 0;
-    //this.ratingRecipe = new HashSet<RatingRecipe>();
+    this.ratingRecipes = new HashSet<>();
     this.creationDate = getCurrentDate();
   }
 
@@ -158,16 +137,6 @@ public class Recipe {
     this.sumRatings = sumRatings;
   }
 
-  /*
-  public Set<RatingRecipe> getRatingRecipe() {
-    return ratingRecipe;
-  }
-
-  public void setRatingRecipe(Set<RatingRecipe> ratingRecipe) {
-    this.ratingRecipe = ratingRecipe;
-  }
-   */
-
   public String getProcess() {
     return process;
   }
@@ -204,15 +173,6 @@ public class Recipe {
     this.recipeImage = recipeImage;
   }
 
-  /*
-  public Set<UploadedFile> getAttachments() {
-    return attachments;
-  }
-
-  public void setAttachment(UploadedFile newImage) {
-    attachments.add(newImage);
-  }
-   */
   public List<RecipeComment> getComments() {
     return comments;
   }
@@ -228,4 +188,56 @@ public class Recipe {
   public void setUserReports(Set<User> userReports) {
     this.userReports = userReports;
   }
+
+  public void removeProduct(Product productToRemove) {
+    usedProducts.remove(productToRemove);
+  }
+
+  public Set<RatingRecipe> getRatingRecipes() {
+    return ratingRecipes;
+  }
+
+  public void setRatingRecipes(Set<RatingRecipe> ratingRecipes) {
+    this.ratingRecipes = ratingRecipes;
+  }
+
+  public void addRatingRecipe(User user, double rating) {
+    RatingRecipe newRating = new RatingRecipe(user, this, rating);
+    this.ratingRecipes.add(newRating);
+  }
+
+  public void deleteRating(Double value) {
+    --this.numRatings;
+    this.sumRatings = this.sumRatings - value;
+    this.rating = this.sumRatings / this.numRatings;
+  }
+
+  public boolean existsRatingRecipeById(Long user_id) {
+
+    for (RatingRecipe next : this.ratingRecipes) {
+      if (next.getRecipe().getId() == this.id && next.getUser().getId() == user_id) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public void deleteRatingById(Long id_user) {
+    if (ratingRecipes.size() == 1) {
+      this.numRatings = 0;
+      this.sumRatings = 0;
+      this.rating = 0.0;
+      ratingRecipes = new HashSet<>();
+    } else {
+      for (RatingRecipe next : this.ratingRecipes) {
+        if (next.getRecipe().getId() == this.id && next.getUser().getId() == id_user) {
+          --this.numRatings;
+          this.sumRatings -= next.getRating();
+          this.rating = this.sumRatings / this.numRatings;
+          ratingRecipes.remove(next);
+        }
+      }
+    }
+  }
 }
+

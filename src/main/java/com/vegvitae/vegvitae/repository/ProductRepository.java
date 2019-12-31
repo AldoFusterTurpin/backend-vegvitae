@@ -29,5 +29,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
   boolean existsByBarcode(Long id);
 
+  @Transactional
   void deleteByBarcode(Long id);
 }

@@ -18,9 +18,7 @@ public class newProductDTO {
 
   private String uploaderComment;
 
-
   public newProductDTO() {
-
   }
 
   public newProductDTO(Long barcode, String name,

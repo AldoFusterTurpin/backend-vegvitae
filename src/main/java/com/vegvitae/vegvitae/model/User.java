@@ -73,7 +73,9 @@ public class User {
     this.email = email;
     this.personalDescription = personalDescription;
     this.socialMediaLinks = socialMediaLinks;
-    this.productRatings = new HashSet<RatingProduct>();
+    this.productRatings = new HashSet<>();
+    this.favouriteProducts = new HashSet<>();
+    this.favouriteRecipes = new HashSet<>();
   }
 
   public Long getId() {
@@ -140,6 +142,14 @@ public class User {
     this.favouriteProducts = favouriteProducts;
   }
 
+  public String getToken() {
+    return token;
+  }
+
+  public void setToken(String token) {
+    this.token = token;
+  }
+
   public void setFavouriteProduct(Product favouriteProduct) {
     this.favouriteProducts.add(favouriteProduct);
   }
@@ -156,11 +166,11 @@ public class User {
     this.productRatings = productRatings;
   }
 
-  public String getToken() {
-    return token;
+  public void deleteFavouriteRecipe(Recipe favouriteRecipe) {
+    this.favouriteRecipes.remove(favouriteRecipe);
   }
 
-  public void setToken(String token) {
-    this.token = token;
+  public void setFavouriteRecipe(Recipe favouriteRecipe) {
+    this.favouriteRecipes.add(favouriteRecipe);
   }
 }

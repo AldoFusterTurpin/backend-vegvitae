@@ -13,3 +13,24 @@ test:
   stage: test
   script:
     - mvn test
+
+stages:
+  - build
+  - test
+  - deploy
+
+# name of the job.
+maven_build:
+  # A job is always executed within a stage.
+  # If no stage is set, it defaults to 'test'.
+  stage: test
+  # Since we require Maven for this job,
+  # we can restrict the job to runners with a certain tag.
+  # Of course, it is our duty to actually configure a runner
+  # with the tag 'maven' and a working maven installation
+  tags:
+    - maven
+  # If any of the commands returns a non zero exit code the job fails.
+  script:
+    - echo "Building project with maven"
+    - mvn verify

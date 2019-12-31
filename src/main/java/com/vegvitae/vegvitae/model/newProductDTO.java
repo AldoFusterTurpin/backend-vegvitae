@@ -16,8 +16,6 @@ public class newProductDTO {
 
   private String shop;
 
-  private Long uploaderId;
-
   private String uploaderComment;
 
 
@@ -36,7 +34,6 @@ public class newProductDTO {
     this.additionalTypes = additionalTypes;
     this.supermarketsAvailable = supermarketsAvailable;
     this.shop = shop;
-    this.uploaderId = uploaderId;
     this.uploaderComment = uploaderComment;
   }
 
@@ -88,14 +85,6 @@ public class newProductDTO {
 
   public void setShop(String shop) {
     this.shop = shop;
-  }
-
-  public Long getUploaderId() {
-    return uploaderId;
-  }
-
-  public void setUploaderId(Long uploaderId) {
-    this.uploaderId = uploaderId;
   }
 
   public String getUploaderComment() {

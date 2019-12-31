@@ -32,6 +32,8 @@ public class User {
   @Email
   private String email;
 
+  private String token;
+
   private String personalDescription;
 
   @ElementCollection
@@ -40,7 +42,7 @@ public class User {
   @ElementCollection
   @OneToMany
   private Set<Product> uploadedProducts;
-  
+
   @JsonIgnore
   @OneToMany(mappedBy = "user")
   private Set<RatingProduct> productRatings;
@@ -145,12 +147,20 @@ public class User {
   public void deleteFavouriteProduct(Product productDeleted) {
     this.favouriteProducts.remove(productDeleted);
   }
-  
+
   public Set<RatingProduct> getProductRatings() {
     return productRatings;
   }
 
   public void setProductRatings(Set<RatingProduct> productRatings) {
     this.productRatings = productRatings;
+  }
+
+  public String getToken() {
+    return token;
+  }
+
+  public void setToken(String token) {
+    this.token = token;
   }
 }

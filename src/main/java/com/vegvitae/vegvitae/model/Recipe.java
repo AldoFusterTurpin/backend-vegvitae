@@ -38,7 +38,6 @@ public class Recipe {
 
   @ManyToOne
   @JoinColumn(name = "creator_id")
-  @NotNull(message = "Creator can't be NULL.")
   private User creator;
 
   @DecimalMin(value = "0.0", message = "Rating has to be at least {value}.")

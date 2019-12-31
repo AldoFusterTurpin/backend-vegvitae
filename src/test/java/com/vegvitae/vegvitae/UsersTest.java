@@ -21,6 +21,8 @@ public class UsersTest extends AbstractTest {
 
   private final String uri = "/api/users";
 
+  private String token;
+
   @Override
   @BeforeClass
   public void setUp() {
@@ -48,6 +50,7 @@ public class UsersTest extends AbstractTest {
     assertEquals("www.youtube.com", userResponse.getSocialMediaLinks().get(0));
     assertEquals("www.facebook.com", userResponse.getSocialMediaLinks().get(1));
     assertEquals(user.getPersonalDescription(), userResponse.getPersonalDescription());
+    token = userResponse.getToken();
   }
 
   @Test(dependsOnMethods = "createUserTest")
@@ -87,11 +90,13 @@ public class UsersTest extends AbstractTest {
   public void editUserTest() throws Exception {
     List<String> socialMediaLinks = new ArrayList<String>();
     socialMediaLinks.add("www.twitter.com");
-    User user = new User("testEdit", "TEst1234Edit", "testEdit@testEdit.com",
-        "I'm just a user test edit", socialMediaLinks);
+    User user = new User("testEditUser", "TEst1234", "testEditUser@testuser.com", "I'm just a user test",
+        socialMediaLinks);
     String inputJson = super.mapToJson(user);
-    MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.put(uri + "/1").contentType(
-        MediaType.APPLICATION_JSON_VALUE).content(inputJson)).andReturn();
+    MvcResult mvcResult = mvc.perform(
+        MockMvcRequestBuilders.put(uri + "/1").header("token", this.token)
+            .contentType(
+                MediaType.APPLICATION_JSON_VALUE).content(inputJson)).andReturn();
     assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
     User userResponse = mapFromJson(mvcResult.getResponse().getContentAsString(), User.class);
     assertEquals(user.getUsername(), userResponse.getUsername());

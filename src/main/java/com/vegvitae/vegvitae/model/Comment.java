@@ -24,7 +24,6 @@ public class Comment {
   @NotBlank
   private String text;
 
-  @NotNull
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "userCreator")
   private User author;

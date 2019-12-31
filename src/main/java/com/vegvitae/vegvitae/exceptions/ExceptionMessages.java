@@ -18,7 +18,9 @@ public enum ExceptionMessages {
   PRODUCT_INVALID_BARCODE("Product with the specified barcode doesn't exist"),
   COMMENT_INVALID_ID("Comment with the specified id doesn't exist"),
   COMMENT_ALREADY_VOTED("User already voted for this comment"),
-  COMMENT_NOT_VOTED("User didn't vote for this comment");
+  COMMENT_NOT_VOTED("User didn't vote for this comment"),
+  INVALID_TOKEN("This token does not exist or can't do the requested action"),
+  INVALID_COMMENT_AUTHOR("This token does not correspond to the comment user creator");
 
   private String message;
 

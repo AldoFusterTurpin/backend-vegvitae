@@ -42,7 +42,7 @@ public class User {
   @ElementCollection
   @OneToMany
   private Set<Product> uploadedProducts;
-  
+
   @JsonIgnore
   @OneToMany(mappedBy = "user")
   private Set<RatingProduct> productRatings;
@@ -147,7 +147,7 @@ public class User {
   public void deleteFavouriteProduct(Product productDeleted) {
     this.favouriteProducts.remove(productDeleted);
   }
-  
+
   public Set<RatingProduct> getProductRatings() {
     return productRatings;
   }

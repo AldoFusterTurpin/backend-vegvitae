@@ -70,7 +70,8 @@ public class RecipeController {
 
   @PostMapping()
   @ResponseStatus(HttpStatus.CREATED)
-  public Resource<Recipe> newRecipe(@Valid @RequestBody Recipe newRecipe, @RequestHeader("token") String token) {
+  public Resource<Recipe> newRecipe(@Valid @RequestBody Recipe newRecipe,
+      @RequestHeader("token") String token) {
     newRecipe.setCreator(userRepository.findByToken(token).orElseThrow(
         () -> new GenericException(HttpStatus.BAD_REQUEST,
             ExceptionMessages.INVALID_TOKEN.getErrorMessage())));
@@ -169,33 +170,30 @@ public class RecipeController {
   }
 
   @PostMapping("{recipeId}/report")
-  void reportProduct(@RequestBody final Long userId, @PathVariable Long recipeId) {
+  void reportProduct(@RequestHeader("token") String token, @PathVariable Long recipeId) {
     Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
     if (recipeOpt.isPresent()) {
       Recipe recipe = recipeOpt.get();
-      Optional<User> userOpt = userRepository.findById(userId);
-      if (userOpt.isPresent()) {
-        User user = userOpt.get();
-        Set<User> usersReports = recipe.getUserReports();
-        if (usersReports.contains(user)) {
-          throw new GenericException(HttpStatus.BAD_REQUEST,
-              "This user already reported this product");
-        }
-        usersReports.add(user);
-        recipe.setUserReports(usersReports);
-        if (usersReports.size() >= 2) {
-          recipeRepository.deleteById(recipeId);
-          return;
-        }
-        recipeRepository.save(recipe);
-        return;
-      } else {
-        throw new GenericException(HttpStatus.BAD_REQUEST, "The specified user doesn't exist");
+      User user = userRepository.findByToken(token).orElseThrow(
+          () -> new GenericException(HttpStatus.BAD_REQUEST,
+              ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+      Set<User> usersReports = recipe.getUserReports();
+      if (usersReports.contains(user)) {
+        throw new GenericException(HttpStatus.BAD_REQUEST,
+            "This user already reported this product");
       }
+      usersReports.add(user);
+      recipe.setUserReports(usersReports);
+      if (usersReports.size() >= 2) {
+        recipeRepository.deleteById(recipeId);
+        return;
+      }
+      recipeRepository.save(recipe);
+      return;
     } else {
       throw new GenericException(HttpStatus.BAD_REQUEST, "The specified product doesn't exist");
     }
   }
-  
+
 }
 

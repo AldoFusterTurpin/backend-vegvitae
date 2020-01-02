@@ -24,15 +24,14 @@ public class RecipeComment {
   @NotBlank
   private String text;
 
-  @NotNull
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "userCreator")
+  @JoinColumn(name = "userCreatorRecipeComment")
   private User author;
 
   private Date creationDate;
 
   @ManyToMany(fetch = FetchType.LAZY)
-  @JoinTable(name = "votes", joinColumns = @JoinColumn(name = "commentId"), inverseJoinColumns = @JoinColumn(name = "userId"))
+  @JoinTable(name = "voteRecipeComments", joinColumns = @JoinColumn(name = "commentId"), inverseJoinColumns = @JoinColumn(name = "userId"))
   private Set<User> votesUsers;
 
   public Long getId() {

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,9 +48,12 @@ public class RecipeCommentController {
 
   @PostMapping
   RecipeComment createRecipeComment(@PathVariable Long recipeId,
-      @Valid @RequestBody RecipeComment comment) {
+      @Valid @RequestBody RecipeComment comment, @RequestHeader("token") String token) {
     comment.setCreationDate(new Date());
     comment.setVotesUsers(new HashSet<>());
+    comment.setAuthor(userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage())));
     Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
     if (recipeOpt.isPresent()) {
       Recipe recipe = recipeOpt.get();
@@ -79,7 +83,7 @@ public class RecipeCommentController {
 
   @PutMapping("/{id}")
   RecipeComment editRecipeComment(@PathVariable Long recipeId, @PathVariable Long id,
-      @Valid @RequestBody RecipeComment commentNew) {
+      @Valid @RequestBody RecipeComment commentNew, @RequestHeader("token") String token) {
     Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
     if (recipeOpt.isPresent()) {
       Recipe recipe = recipeOpt.get();
@@ -87,6 +91,12 @@ public class RecipeCommentController {
       if (commentOpt.isPresent()) {
         List<RecipeComment> comments = recipe.getComments();
         RecipeComment comment = commentOpt.get();
+        User user = userRepository.findByToken(token).orElseThrow(
+            () -> new GenericException(HttpStatus.BAD_REQUEST,
+                ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+        if(!user.equals(comment.getAuthor())) {
+          throw new GenericException(HttpStatus.BAD_REQUEST, ExceptionMessages.INVALID_COMMENT_AUTHOR.getErrorMessage());
+        }
         comments.remove(comment);
         comment.setText(commentNew.getText());
         recipeCommentRepository.save(comment);
@@ -106,7 +116,7 @@ public class RecipeCommentController {
 
   @ResponseStatus(value = HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
-  void deleteRecipeComment(@PathVariable Long recipeId, @PathVariable Long id) {
+  void deleteRecipeComment(@PathVariable Long recipeId, @PathVariable Long id, @RequestHeader("token") String token) {
     Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
     if (recipeOpt.isPresent()) {
       Recipe recipe = recipeOpt.get();
@@ -114,6 +124,12 @@ public class RecipeCommentController {
       if (commentOpt.isPresent()) {
         List<RecipeComment> comments = recipe.getComments();
         RecipeComment comment = commentOpt.get();
+        User user = userRepository.findByToken(token).orElseThrow(
+            () -> new GenericException(HttpStatus.BAD_REQUEST,
+                ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+        if(!user.equals(comment.getAuthor())) {
+          throw new GenericException(HttpStatus.BAD_REQUEST, ExceptionMessages.INVALID_COMMENT_AUTHOR.getErrorMessage());
+        }
         comments.remove(comment);
         recipeCommentRepository.delete(comment);
         recipe.setComments(comments);
@@ -129,7 +145,8 @@ public class RecipeCommentController {
   }
 
   @PostMapping("/{id}/vote")
-  RecipeComment voteRecipeComment(@PathVariable Long recipeId, @PathVariable Long id) {
+  RecipeComment voteRecipeComment(@PathVariable Long recipeId, @PathVariable Long id,
+      @RequestHeader("token") String token) {
     Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
     if (recipeOpt.isPresent()) {
       Recipe recipe = recipeOpt.get();
@@ -139,7 +156,9 @@ public class RecipeCommentController {
         RecipeComment comment = commentOpt.get();
         comments.remove(comment);
         Set<User> votes = comment.getVotesUsers();
-        User user = userRepository.findById(1L).get();
+        User user = userRepository.findByToken(token).orElseThrow(
+            () -> new GenericException(HttpStatus.BAD_REQUEST,
+                ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
         if (votes.contains(user)) {
           throw new GenericException(HttpStatus.BAD_REQUEST,
               "Comment already voted");
@@ -162,7 +181,8 @@ public class RecipeCommentController {
   }
 
   @DeleteMapping("/{id}/vote")
-  RecipeComment unvoteRecipeComment(@PathVariable Long recipeId, @PathVariable Long id) {
+  RecipeComment unvoteRecipeComment(@PathVariable Long recipeId, @PathVariable Long id,
+      @RequestHeader("token") String token) {
     Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
     if (recipeOpt.isPresent()) {
       Recipe recipe = recipeOpt.get();
@@ -173,7 +193,9 @@ public class RecipeCommentController {
         comments.remove(comment);
         Set<User> votes = comment.getVotesUsers();
         //Fixed user until we get authentication
-        User user = userRepository.findById(1L).get();
+        User user = userRepository.findByToken(token).orElseThrow(
+            () -> new GenericException(HttpStatus.BAD_REQUEST,
+                ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
         if (!votes.contains(user)) {
           throw new GenericException(HttpStatus.BAD_REQUEST,
               "Comment not voted");

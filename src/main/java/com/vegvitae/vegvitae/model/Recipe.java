@@ -6,8 +6,12 @@ import io.swagger.annotations.ApiModelProperty;
 import java.sql.Date;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -15,6 +19,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -50,6 +55,17 @@ public class Recipe {
   @JsonIgnore
   private double sumRatings;
 
+  @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinTable(name = "recipeComments", joinColumns = @JoinColumn(name = "recipeId"), inverseJoinColumns = @JoinColumn(name = "recipeCommentId"))
+  List<RecipeComment> comments;
+
+  @JsonIgnore
+  @ManyToMany
+  @JoinTable(name = "reportsRecipe", joinColumns = @JoinColumn(name = "idRecipe"), inverseJoinColumns = @JoinColumn(name = "userId"))
+  Set<User> userReports;
+
+
+
   /*
   @JsonIgnore
   @OneToMany(mappedBy = "recipe")
@@ -74,6 +90,7 @@ public class Recipe {
   @JsonIgnore
   @Lob
   byte[] recipeImage;
+
 
   public Recipe() {
   }
@@ -196,4 +213,19 @@ public class Recipe {
     attachments.add(newImage);
   }
    */
+  public List<RecipeComment> getComments() {
+    return comments;
+  }
+
+  public void setComments(List<RecipeComment> comments) {
+    this.comments = comments;
+  }
+
+  public Set<User> getUserReports() {
+    return userReports;
+  }
+
+  public void setUserReports(Set<User> userReports) {
+    this.userReports = userReports;
+  }
 }

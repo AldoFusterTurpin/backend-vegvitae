@@ -87,7 +87,7 @@ public class ProductController {
     Product product = new Product(productDTO.getBarcode(), productDTO.getName(),
         productDTO.getBaseType(), productDTO.getAdditionalTypes(),
         productDTO.getSupermarketsAvailable(), productDTO.getShop(), uploader,
-        productDTO.getUploaderComment());
+        productDTO.getUploaderComment(), productDTO.getApproximatePrice());
 
     productRepository.save(product);
 

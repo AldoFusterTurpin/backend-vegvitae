@@ -37,6 +37,8 @@ public class Product {
   @NotBlank(message = "Product name can't be blank.")
   private String name;
 
+  private Double approximatePrice;
+
   @NotNull(message = "Product base type can't be blank.")
   private ProductBaseTypeEnum baseType;
 
@@ -93,7 +95,7 @@ public class Product {
   public Product(long barcode, String name, ProductBaseTypeEnum baseType,
       Set<ProductAdditionalTypeEnum> additionalTypes,
       Set<SupermarketEnum> supermarketsAvailable, String shop, User uploader,
-      String uploaderComment) {
+      String uploaderComment, Double approximatePrice) {
     this.barcode = barcode;
     this.name = name;
     this.baseType = baseType;
@@ -109,6 +111,7 @@ public class Product {
     this.userReports = new HashSet<User>();
     this.comments = new ArrayList<Comment>();
     this.creationDate = getCurrentDate();
+    this.approximatePrice = approximatePrice;
   }
 
   public long getBarcode() {
@@ -254,5 +257,13 @@ public class Product {
 
   public void setComments(List<Comment> comments) {
     this.comments = comments;
+  }
+
+  public Double getApproximatePrice() {
+    return approximatePrice;
+  }
+
+  public void setApproximatePrice(Double approximatePrice) {
+    this.approximatePrice = approximatePrice;
   }
 }

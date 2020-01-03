@@ -18,6 +18,8 @@ public class newProductDTO {
 
   private String uploaderComment;
 
+  private Double approximatePrice;
+
 
   public newProductDTO() {
 
@@ -27,7 +29,7 @@ public class newProductDTO {
       ProductBaseTypeEnum baseType,
       Set<ProductAdditionalTypeEnum> additionalTypes,
       Set<SupermarketEnum> supermarketsAvailable, String shop, Long uploaderId,
-      String uploaderComment) {
+      String uploaderComment, Double approximatePrice) {
     this.barcode = barcode;
     this.name = name;
     this.baseType = baseType;
@@ -35,6 +37,7 @@ public class newProductDTO {
     this.supermarketsAvailable = supermarketsAvailable;
     this.shop = shop;
     this.uploaderComment = uploaderComment;
+    this.approximatePrice = approximatePrice;
   }
 
   public Long getBarcode() {
@@ -93,5 +96,13 @@ public class newProductDTO {
 
   public void setUploaderComment(String uploaderComment) {
     this.uploaderComment = uploaderComment;
+  }
+
+  public Double getApproximatePrice() {
+    return approximatePrice;
+  }
+
+  public void setApproximatePrice(Double approximatePrice) {
+    this.approximatePrice = approximatePrice;
   }
 }

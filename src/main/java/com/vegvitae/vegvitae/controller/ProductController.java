@@ -91,6 +91,10 @@ public class ProductController {
 
     productRepository.save(product);
 
+    // Uploading a product earns the user a certain number of points
+    uploader.addPoints(25);
+    userRepository.save(uploader);
+
     Link selfLink = linkTo(ProductController.class).slash(product.getBarcode()).withSelfRel();
     return new Resource<Product>(product, selfLink);
   }
@@ -384,6 +388,9 @@ public class ProductController {
 
     // Update the state of the Product entity
     productRepository.save(product);
+
+    // Rating a product earns the user a certain number of points
+    user.addPoints(5);
 
     // Update the state of the User entity
     userRepository.save(user);

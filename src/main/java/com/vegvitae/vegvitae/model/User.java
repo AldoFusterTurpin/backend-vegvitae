@@ -34,6 +34,8 @@ public class User {
 
   private String token;
 
+  private int points;
+
   private String personalDescription;
 
   @ElementCollection
@@ -71,6 +73,7 @@ public class User {
     this.username = username;
     this.password = password;
     this.email = email;
+    this.points = 0;
     this.personalDescription = personalDescription;
     this.socialMediaLinks = socialMediaLinks;
     this.productRatings = new HashSet<RatingProduct>();
@@ -122,6 +125,18 @@ public class User {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public int getPoints() {
+    return points;
+  }
+
+  public void setPoints(int points) {
+    this.points = points;
+  }
+
+  public void addPoints(int pointsToAdd) {
+    this.points += pointsToAdd;
   }
 
   public byte[] getImage() {

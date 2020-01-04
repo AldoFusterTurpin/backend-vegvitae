@@ -50,9 +50,10 @@ public class CommentController {
       @RequestHeader("token") String token) {
     comment.setCreationDate(new Date());
     comment.setVotesUsers(new HashSet<>());
-    comment.setAuthor(userRepository.findByToken(token).orElseThrow(
+    User author = userRepository.findByToken(token).orElseThrow(
         () -> new GenericException(HttpStatus.BAD_REQUEST,
-            ExceptionMessages.INVALID_TOKEN.getErrorMessage())));
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+    comment.setAuthor(author);
     Optional<Product> productOpt = productRepository.findById(barcode);
     if (productOpt.isPresent()) {
       Product product = productOpt.get();
@@ -61,6 +62,11 @@ public class CommentController {
       comments.add(newComment);
       product.setComments(comments);
       productRepository.save(product);
+
+      // Commenting a product earns the user a certain number of points
+      author.addPoints(10);
+      userRepository.save(author);
+
       return newComment;
     } else {
       throw new GenericException(HttpStatus.BAD_REQUEST,

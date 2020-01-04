@@ -51,9 +51,10 @@ public class RecipeCommentController {
       @Valid @RequestBody RecipeComment comment, @RequestHeader("token") String token) {
     comment.setCreationDate(new Date());
     comment.setVotesUsers(new HashSet<>());
-    comment.setAuthor(userRepository.findByToken(token).orElseThrow(
+    User author = userRepository.findByToken(token).orElseThrow(
         () -> new GenericException(HttpStatus.BAD_REQUEST,
-            ExceptionMessages.INVALID_TOKEN.getErrorMessage())));
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+    comment.setAuthor(author);
     Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
     if (recipeOpt.isPresent()) {
       Recipe recipe = recipeOpt.get();
@@ -62,6 +63,11 @@ public class RecipeCommentController {
       comments.add(newRecipeComment);
       recipe.setComments(comments);
       recipeRepository.save(recipe);
+
+      // Commenting a recipe earns the user a certain number of points
+      author.addPoints(10);
+      userRepository.save(author);
+
       return newRecipeComment;
     } else {
       throw new GenericException(HttpStatus.BAD_REQUEST,

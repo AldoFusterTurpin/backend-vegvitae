@@ -72,15 +72,21 @@ public class RecipeController {
   @ResponseStatus(HttpStatus.CREATED)
   public Resource<Recipe> newRecipe(@Valid @RequestBody Recipe newRecipe,
       @RequestHeader("token") String token) {
-    newRecipe.setCreator(userRepository.findByToken(token).orElseThrow(
+    User creator = userRepository.findByToken(token).orElseThrow(
         () -> new GenericException(HttpStatus.BAD_REQUEST,
-            ExceptionMessages.INVALID_TOKEN.getErrorMessage())));
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+    newRecipe.setCreator(creator);
     if (!userRepository.findById(newRecipe.getCreator().getId()).isPresent()) {
       throw new GenericException(HttpStatus.NOT_FOUND,
           ExceptionMessages.USER_NOT_FOUND.getErrorMessage() + newRecipe.getId());
     }
 
     recipeRepository.save(newRecipe);
+
+    // Uploading a recipe earns the user a certain number of points
+    creator.addPoints(25);
+    userRepository.save(creator);
+
     return new Resource<>(newRecipe,
         linkTo(methodOn(RecipeController.class).getRecipeById(newRecipe.getId())).withSelfRel());
 

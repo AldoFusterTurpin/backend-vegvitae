@@ -20,7 +20,8 @@ public enum ExceptionMessages {
   COMMENT_ALREADY_VOTED("User already voted for this comment"),
   COMMENT_NOT_VOTED("User didn't vote for this comment"),
   INVALID_TOKEN("This token does not exist or can't do the requested action"),
-  INVALID_COMMENT_AUTHOR("This token does not correspond to the comment user creator");
+  INVALID_COMMENT_AUTHOR("This token does not correspond to the comment user creator"),
+  INVALID_ARTICLE_ID("There is no article with the specified id");
 
   private String message;
 

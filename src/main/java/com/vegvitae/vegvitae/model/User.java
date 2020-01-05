@@ -178,4 +178,24 @@ public class User {
   public void setToken(String token) {
     this.token = token;
   }
+
+  public Set<Product> getUploadedProducts() {
+    return uploadedProducts;
+  }
+
+  public void setUploadedProducts(Set<Product> uploadedProducts) {
+    this.uploadedProducts = uploadedProducts;
+  }
+
+  public Set<Recipe> getFavouriteRecipes() {
+    return favouriteRecipes;
+  }
+
+  public void setFavouriteRecipe(Recipe favouriteRecipe) {
+    this.favouriteRecipes.add(favouriteRecipe);
+  }
+
+  public void deleteFavouriteRecipe(Recipe deletedRecipe){
+    this.favouriteRecipes.remove(deletedRecipe);
+  }
 }

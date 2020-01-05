@@ -7,7 +7,7 @@ import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.Product;
 import com.vegvitae.vegvitae.model.Recipe;
-import com.vegvitae.vegvitae.model.UploadedFile;
+import com.vegvitae.vegvitae.model.User;
 import com.vegvitae.vegvitae.repository.ProductRepository;
 import com.vegvitae.vegvitae.repository.RecipeRepository;
 import com.vegvitae.vegvitae.repository.UploadedFileRepository;
@@ -15,7 +15,6 @@ import com.vegvitae.vegvitae.repository.UserRepository;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -26,16 +25,7 @@ import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import com.vegvitae.vegvitae.model.User;
-import com.vegvitae.vegvitae.repository.ProductRepository;
-import com.vegvitae.vegvitae.repository.RecipeRepository;
-import com.vegvitae.vegvitae.repository.UserRepository;
-import java.util.Optional;
-import java.util.Set;
-import javax.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,8 +37,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api" + RecipeController.PATH)
@@ -200,6 +188,46 @@ public class RecipeController {
       throw new GenericException(HttpStatus.BAD_REQUEST, "The specified product doesn't exist");
     }
   }
+
+  @PutMapping("{id}/favourites")
+  @ResponseStatus(HttpStatus.OK)
+  void addRecipeToFavourite(@RequestHeader("token") String token, @PathVariable Long id){
+    User user = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+
+    Recipe recipe = recipeRepository.findById(id).orElseThrow(
+        () -> new GenericException(HttpStatus.NOT_FOUND,
+            ExceptionMessages.RECIPE_NOT_FOUND.getErrorMessage()));
+
+    if (!user.getFavouriteRecipes().contains(recipe)) {
+      user.setFavouriteRecipe(recipe);
+      userRepository.save(user);
+    }
+    else throw new GenericException(HttpStatus.IM_USED,
+        "You have already added this recipe to favourites.");
+  }
+
+  @DeleteMapping("{id}/favourites")
+  @ResponseStatus(HttpStatus.OK)
+  void removeRecipeFromFavourite(@RequestHeader("token") String token, @PathVariable Long id) {
+    User user = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+
+    Recipe recipe = recipeRepository.findById(id).orElseThrow(
+        () -> new GenericException(HttpStatus.NOT_FOUND,
+            ExceptionMessages.RECIPE_NOT_FOUND.getErrorMessage()));
+
+    if (user.getFavouriteRecipes().contains(recipe)){
+      user.deleteFavouriteRecipe(recipe);
+      userRepository.save(user);
+    }
+    else throw new GenericException(HttpStatus.NOT_FOUND,
+        "You can not remove a recipe from favourites if its not yet in favourites.");
+
+  }
+
 
 }
 

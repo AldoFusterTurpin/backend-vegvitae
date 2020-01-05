@@ -1,29 +1,44 @@
 package com.vegvitae.vegvitae.controller;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
+import com.google.common.hash.Hashing;
 import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
 import com.vegvitae.vegvitae.model.Product;
+import com.vegvitae.vegvitae.model.RatingProduct;
+import com.vegvitae.vegvitae.model.Recipe;
 import com.vegvitae.vegvitae.model.User;
+import com.vegvitae.vegvitae.repository.ProductRepository;
+import com.vegvitae.vegvitae.repository.RatingProductRepository;
 import com.vegvitae.vegvitae.repository.UserRepository;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.stream.Collectors;
-import com.google.common.hash.Hashing;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 
 @RestController
@@ -34,6 +49,12 @@ class UserController {
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private RatingProductRepository ratingProductRepository;
+
+  @Autowired
+  private ProductRepository productRepository;
 
   @GetMapping()
   Resources<Resource<User>> getAllUsers() {
@@ -251,4 +272,38 @@ class UserController {
     }
     return (criteria[0] > 0 && criteria[1] > 0 && criteria[2] > 0);
   }
+
+  @GetMapping("/ratedProducts")
+  public Resources<Resource<Product>> getRatedProducts(@RequestHeader("token") String token){
+    User user = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+
+    List<RatingProduct> productsRated = ratingProductRepository.findByUser(user);
+    List<Resource<Product>> productsRatedResource = new ArrayList<>();
+
+    for (RatingProduct next : productsRated){
+      productsRatedResource.add(new Resource<>(next.getProduct(),
+          linkTo(methodOn(ProductController.class).getProductByBarcode(next.getProduct().getBarcode())).withSelfRel()));
+    }
+    return new Resources<>(productsRatedResource);
+  }
+
+  @GetMapping("/favouriteRecipes")
+  public Resources<Resource<Recipe>> getFavouriteRecipes(@RequestHeader("token") String token) {
+    User user = userRepository.findByToken(token).orElseThrow(
+        () -> new GenericException(HttpStatus.BAD_REQUEST,
+            ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
+
+    List<Resource<Recipe>> favRecipesResource = new ArrayList<>();
+    Set<Recipe> favRecipes = user.getFavouriteRecipes();
+
+    for (Recipe next : favRecipes){
+      favRecipesResource.add(new Resource<>(next,
+          linkTo(methodOn(RecipeController.class).getRecipeById(next.getId())).withSelfRel()));
+    }
+
+    return new Resources<>(favRecipesResource);
+  }
+
 }

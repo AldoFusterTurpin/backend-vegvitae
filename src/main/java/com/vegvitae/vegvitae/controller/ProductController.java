@@ -11,6 +11,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 import com.vegvitae.vegvitae.exceptions.ExceptionMessages;
 import com.vegvitae.vegvitae.exceptions.GenericException;
+import com.vegvitae.vegvitae.model.SportProductsDTO;
 import com.vegvitae.vegvitae.model.newProductDTO;
 import com.vegvitae.vegvitae.model.OrderTypeEnum;
 import com.vegvitae.vegvitae.model.Product;
@@ -426,18 +427,24 @@ public class ProductController {
 
   @Transactional
   @GetMapping("/sport_supplemet_products")
-  public Resources<Resource<Product>> getSportSupplementProducts(
+  public List<SportProductsDTO> getSportSupplementProducts(
       @RequestHeader("token") String token) {
     if (token.equals("sport")) {
       List<ProductAdditionalTypeEnum> sport = new ArrayList<>();
       sport.add(ProductAdditionalTypeEnum.SPORTS_SUPPLEMENT);
       System.out.println(sport);
       List<Product> sportsProducts = productRepository.findByAdditionalTypesIn(sport);
-      List<Resource<Product>> resource = new ArrayList<>();
+      List<SportProductsDTO> sportProductsDTOS = new ArrayList<>();
       for (Product next : sportsProducts) {
-        resource.add(new Resource<>(next));
+        Set<String> additionalProd = new HashSet<>();
+        if (!next.getAdditionalTypes().isEmpty()){
+          for (ProductAdditionalTypeEnum next_add : next.getAdditionalTypes()){
+            additionalProd.add(next_add.toString());
+          }
+        }
+        sportProductsDTOS.add(new SportProductsDTO(next.getName(), next.getBaseType().toString(), additionalProd));
       }
-      return new Resources<>(resource);
+      return sportProductsDTOS;
     } else {
       throw new GenericException(HttpStatus.BAD_REQUEST,
           "Your token doesn't have necessary permissions to acces the request");

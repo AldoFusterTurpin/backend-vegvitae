@@ -36,6 +36,9 @@ public class User {
 
   private int points;
 
+  @JsonIgnore
+  private boolean pointsSecondaryApp = false;
+
   private String personalDescription;
 
   @ElementCollection
@@ -197,5 +200,13 @@ public class User {
 
   public void deleteFavouriteRecipe(Recipe deletedRecipe){
     this.favouriteRecipes.remove(deletedRecipe);
+  }
+
+  public boolean isPointsSecondaryApp() {
+    return pointsSecondaryApp;
+  }
+
+  public void setPointsSecondaryApp(boolean pointsSecondaryApp) {
+    this.pointsSecondaryApp = pointsSecondaryApp;
   }
 }

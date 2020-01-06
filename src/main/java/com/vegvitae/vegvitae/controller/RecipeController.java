@@ -15,6 +15,7 @@ import com.vegvitae.vegvitae.repository.UserRepository;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -191,7 +192,7 @@ public class RecipeController {
 
   @PutMapping("{id}/favourites")
   @ResponseStatus(HttpStatus.OK)
-  void addRecipeToFavourite(@RequestHeader("token") String token, @PathVariable Long id){
+  void addRecipeToFavourite(@RequestHeader("token") String token, @PathVariable Long id) {
     User user = userRepository.findByToken(token).orElseThrow(
         () -> new GenericException(HttpStatus.BAD_REQUEST,
             ExceptionMessages.INVALID_TOKEN.getErrorMessage()));
@@ -219,15 +220,59 @@ public class RecipeController {
         () -> new GenericException(HttpStatus.NOT_FOUND,
             ExceptionMessages.RECIPE_NOT_FOUND.getErrorMessage()));
 
-    if (user.getFavouriteRecipes().contains(recipe)){
+    if (user.getFavouriteRecipes().contains(recipe)) {
       user.deleteFavouriteRecipe(recipe);
       userRepository.save(user);
+    } else {
+      throw new GenericException(HttpStatus.NOT_FOUND,
+          "You can not remove a recipe from favourites if its not yet in favourites.");
     }
-    else throw new GenericException(HttpStatus.NOT_FOUND,
-        "You can not remove a recipe from favourites if its not yet in favourites.");
 
   }
 
+  @GetMapping()
+  public Resources<Resource<Recipe>> getAllRecipes() {
+    List<Recipe> allRecipes = recipeRepository.findAll();
+    List<Resource<Recipe>> recipesResources = new ArrayList<>();
 
+    for (Recipe next : allRecipes) {
+      recipesResources.add(new Resource<>(next,
+          linkTo(methodOn(RecipeController.class).getRecipeById(next.getId())).withSelfRel()));
+    }
+
+    return new Resources<>(recipesResources);
+  }
+
+  @GetMapping("/search")
+  public Resources<Resource<Recipe>> searchRecipes(
+      @RequestParam(name = "title", required = false) String title,
+      @RequestParam(name = "idProduct", required = false) Long idProduct) {
+
+    List<Resource<Recipe>> recipeResources = new ArrayList<>();
+    Set<Recipe> recipes = new HashSet<>();
+    if (title != null){
+      recipes = recipeRepository.findRecipeByTitleContaining(title);
+    }
+    if (idProduct != null){
+      Product actualProduct = productRepository.findById(idProduct).orElseThrow(
+          () -> new GenericException(HttpStatus.NOT_FOUND,
+              ExceptionMessages.PRODUCT_NOT_FOUND.getErrorMessage()));
+
+      if (recipes.isEmpty()){
+        recipes = recipeRepository.findRecipeByUsedProducts(actualProduct);
+      }
+      else{
+        Set<Recipe> aux = recipeRepository.findRecipeByUsedProducts(actualProduct);
+        recipes.retainAll(aux);
+      }
+    }
+
+    for (Recipe next : recipes){
+      recipeResources.add(new Resource<>(next,
+          linkTo(methodOn(RecipeController.class).getRecipeById(next.getId())).withSelfRel()));
+    }
+
+    return new Resources<>(recipeResources);
+  }
 }
 

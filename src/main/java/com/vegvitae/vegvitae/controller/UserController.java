@@ -306,4 +306,18 @@ class UserController {
     return new Resources<>(favRecipesResource);
   }
 
+  @PutMapping("/{id}/redeemPoints")
+  void redeemPoints(@RequestHeader("token") String token, @PathVariable("id") Long id) {
+    User user = userRepository.findById(id).orElseThrow(() -> new GenericException(HttpStatus.BAD_REQUEST, ExceptionMessages.USER_NOT_FOUND.getErrorMessage()  + id));
+    if(!user.getToken().equals(token)) {
+      throw new GenericException(HttpStatus.FORBIDDEN, ExceptionMessages.INVALID_TOKEN.getErrorMessage());
+    }
+    if(user.isPointsSecondaryApp()) {
+      throw new GenericException(HttpStatus.FORBIDDEN, "This user already redeemed the points");
+    }
+    user.setPointsSecondaryApp(true);
+    user.setPoints(user.getPoints() + 100);
+    userRepository.save(user);
+  }
+
 }

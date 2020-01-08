@@ -146,7 +146,7 @@ public class ProductController {
           break;
       }
     } else {
-      comparator = Comparator.comparing(Product::getRating).reversed();
+      comparator = Comparator.comparing(Product::getRating);
     }
 
     List<Resource<Product>> products = productRepository.findAll().stream().sorted(comparator)

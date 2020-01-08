@@ -81,6 +81,7 @@ public class RecipeController {
 
   }
 
+  @Transactional
   @GetMapping("{id}")
   public Resource<Recipe> getRecipeById(@PathVariable Long id) {
     Recipe recipe = recipeRepository.findById(id).orElseThrow(
@@ -209,6 +210,7 @@ public class RecipeController {
         "You have already added this recipe to favourites.");
   }
 
+  @Transactional
   @DeleteMapping("{id}/favourites")
   @ResponseStatus(HttpStatus.OK)
   void removeRecipeFromFavourite(@RequestHeader("token") String token, @PathVariable Long id) {
@@ -230,6 +232,7 @@ public class RecipeController {
 
   }
 
+  @Transactional
   @GetMapping()
   public Resources<Resource<Recipe>> getAllRecipes() {
     List<Recipe> allRecipes = recipeRepository.findAll();
@@ -243,6 +246,7 @@ public class RecipeController {
     return new Resources<>(recipesResources);
   }
 
+  @Transactional
   @GetMapping("/search")
   public Resources<Resource<Recipe>> searchRecipes(
       @RequestParam(name = "title", required = false) String title,
@@ -250,21 +254,24 @@ public class RecipeController {
 
     List<Resource<Recipe>> recipeResources = new ArrayList<>();
     Set<Recipe> recipes = new HashSet<>();
-    if (title != null){
+    if (title != null && idProduct != null){
       recipes = recipeRepository.findRecipeByTitleContaining(title);
+      Product actualProduct = productRepository.findById(idProduct).orElseThrow(
+          () -> new GenericException(HttpStatus.NOT_FOUND,
+              ExceptionMessages.PRODUCT_NOT_FOUND.getErrorMessage()));
+
+      Set<Recipe> aux = recipeRepository.findRecipeByUsedProducts(actualProduct);
+      recipes.retainAll(aux);
     }
     if (idProduct != null){
       Product actualProduct = productRepository.findById(idProduct).orElseThrow(
           () -> new GenericException(HttpStatus.NOT_FOUND,
               ExceptionMessages.PRODUCT_NOT_FOUND.getErrorMessage()));
 
-      if (recipes.isEmpty()){
-        recipes = recipeRepository.findRecipeByUsedProducts(actualProduct);
-      }
-      else{
-        Set<Recipe> aux = recipeRepository.findRecipeByUsedProducts(actualProduct);
-        recipes.retainAll(aux);
-      }
+      recipes = recipeRepository.findRecipeByUsedProducts(actualProduct);
+    }
+    if (title != null){
+      recipes = recipeRepository.findRecipeByTitleContaining(title);
     }
 
     for (Recipe next : recipes){

@@ -36,7 +36,6 @@ public class User {
 
   private int points;
 
-  @JsonIgnore
   private boolean pointsSecondaryApp = false;
 
   private String personalDescription;

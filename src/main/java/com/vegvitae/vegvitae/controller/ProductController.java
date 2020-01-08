@@ -100,6 +100,7 @@ public class ProductController {
     return new Resource<Product>(product, selfLink);
   }
 
+  @Transactional
   @GetMapping
   Resources<Resource<Product>> getAllProducts(
       @RequestParam(name = "order", required = false) OrderTypeEnum orderBy,
@@ -174,6 +175,7 @@ public class ProductController {
 
   }
 
+  @Transactional
   @GetMapping("/search")
   Resources<Resource<Product>> getProductsByTags(
       @RequestParam(name = "base", required = false) List<ProductBaseTypeEnum> baseTags,

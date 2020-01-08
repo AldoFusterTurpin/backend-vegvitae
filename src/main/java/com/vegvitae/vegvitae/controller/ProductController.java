@@ -124,6 +124,10 @@ public class ProductController {
                 .filter(prod -> prod.getContent().getUploader().getId().equals(userId)).collect(
                     Collectors.toList());
           }
+          products = products.stream().filter(
+              prod -> !prod.getContent().getBaseType().equals(ProductBaseTypeEnum.NOT_VEGGIE))
+              .collect(
+                  Collectors.toList());
           return new Resources<>(products,
               linkTo(methodOn(ProductController.class).getAllProducts(TODAY, userId))
                   .withSelfRel());
@@ -159,6 +163,9 @@ public class ProductController {
           .filter(prod -> prod.getContent().getUploader().getId().equals(userId)).collect(
               Collectors.toList());
     }
+    products = products.stream().filter(
+        prod -> !prod.getContent().getBaseType().equals(ProductBaseTypeEnum.NOT_VEGGIE)).collect(
+        Collectors.toList());
     return new Resources<>(products,
         linkTo(methodOn(ProductController.class).getAllProducts(orderBy, userId)).withSelfRel());
   }
@@ -439,12 +446,13 @@ public class ProductController {
       List<SportProductsDTO> sportProductsDTOS = new ArrayList<>();
       for (Product next : sportsProducts) {
         Set<String> additionalProd = new HashSet<>();
-        if (!next.getAdditionalTypes().isEmpty()){
-          for (ProductAdditionalTypeEnum next_add : next.getAdditionalTypes()){
+        if (!next.getAdditionalTypes().isEmpty()) {
+          for (ProductAdditionalTypeEnum next_add : next.getAdditionalTypes()) {
             additionalProd.add(next_add.toString());
           }
         }
-        sportProductsDTOS.add(new SportProductsDTO(next.getName(), next.getBaseType().toString(), additionalProd));
+        sportProductsDTOS.add(
+            new SportProductsDTO(next.getName(), next.getBaseType().toString(), additionalProd));
       }
       return sportProductsDTOS;
     } else {

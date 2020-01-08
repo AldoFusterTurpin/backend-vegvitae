@@ -234,9 +234,11 @@ public class ProductController {
     }
 
     for (Product prod : products) {
-      resourceProducts.add(new Resource<>(prod,
-          linkTo(methodOn(ProductController.class).getProductByBarcode(prod.getBarcode()))
-              .withSelfRel()));
+      if (!prod.getBaseType().equals(ProductBaseTypeEnum.NOT_VEGGIE)) {
+        resourceProducts.add(new Resource<>(prod,
+            linkTo(methodOn(ProductController.class).getProductByBarcode(prod.getBarcode()))
+                .withSelfRel()));
+      }
     }
     return new Resources<>(getAllLinksResourcesWithAllLinks(resourceProducts));
   }

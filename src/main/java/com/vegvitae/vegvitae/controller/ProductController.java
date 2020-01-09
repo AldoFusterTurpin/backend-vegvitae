@@ -383,9 +383,9 @@ public class ProductController {
     // Make the associations between the join table Rating, User and Product
     Set<RatingProduct> userRatingProducts = user.getProductRatings();
     Set<RatingProduct> productRatings = product.getRatingProducts();
-    if (ratingProductRepository.existsById(new UserProductId(user.getId(), productId))) {
+    if (ratingProductRepository.findByUserAndProduct(user, product).isPresent()) {
       RatingProduct oldRatingProduct = ratingProductRepository
-          .getOne(new UserProductId(user.getId(), productId));
+          .findByUserAndProduct(user, product).get();
       // Change the user product rating
       product.changeUserRating(oldRatingProduct.getRating(), value);
       userRatingProducts.remove(oldRatingProduct);

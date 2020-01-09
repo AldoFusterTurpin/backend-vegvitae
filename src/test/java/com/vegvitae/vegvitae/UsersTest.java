@@ -94,7 +94,7 @@ public class UsersTest extends AbstractTest {
         socialMediaLinks);
     String inputJson = super.mapToJson(user);
     MvcResult mvcResult = mvc.perform(
-        MockMvcRequestBuilders.put(uri + "/2").header("token", this.token)
+        MockMvcRequestBuilders.put(uri + "/1").header("token", this.token)
             .contentType(
                 MediaType.APPLICATION_JSON_VALUE).content(inputJson)).andReturn();
     assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
@@ -111,7 +111,7 @@ public class UsersTest extends AbstractTest {
 
   @Test(dependsOnMethods = "editUserTest")
   public void deleteUserTest() throws Exception {
-    MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.delete(uri + "/2")).andReturn();
+    MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.delete(uri + "/1")).andReturn();
     assertEquals(HttpStatus.OK.value(), mvcResult.getResponse().getStatus());
   }
 

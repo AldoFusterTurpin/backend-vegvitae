@@ -27,6 +27,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,7 +57,8 @@ class UserController {
   @Autowired
   private ProductRepository productRepository;
 
-  @GetMapping()
+  @Transactional
+  @GetMapping
   Resources<Resource<User>> getAllUsers() {
 
     List<Resource<User>> users = userRepository.findAll().stream()
@@ -76,6 +78,7 @@ class UserController {
         linkTo(methodOn(UserController.class).getAllUsers()).withSelfRel());
   }
 
+  @Transactional
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   Resource<User> newUser(@Valid @RequestBody User createNewUser) {
@@ -114,6 +117,7 @@ class UserController {
         linkTo(methodOn(UserController.class).getUserById(createNewUser.getId())).withSelfRel());
   }
 
+  @Transactional
   @PostMapping("/login")
   Resource<User> login(@RequestBody Map<String, String> userData) {
     if (!userData.containsKey("username") || userData.get("username").length() <= 0) {
@@ -144,7 +148,7 @@ class UserController {
     return resource;
   }
 
-
+  @Transactional
   @GetMapping("/{id}")
   Resource<User> getUserById(@PathVariable Long id) {
 
@@ -161,6 +165,7 @@ class UserController {
     return resource;
   }
 
+  @Transactional
   @PutMapping("{id}/image")
   void uploadUserImage(@PathVariable Long id,
       @RequestParam("image") MultipartFile image) throws IOException {
@@ -170,6 +175,7 @@ class UserController {
     userRepository.save(user);
   }
 
+  @Transactional
   @GetMapping("{id}/image")
   ResponseEntity<byte[]> getUserImage(@PathVariable Long id) {
     User user = userRepository.findById(id)
@@ -182,6 +188,7 @@ class UserController {
     }
   }
 
+  @Transactional
   @PutMapping("{id}")
   Resource<User> replaceUserById(@Valid @RequestBody User newUser, @PathVariable Long id,
       @RequestHeader("token") String token) {
@@ -235,11 +242,13 @@ class UserController {
     return resource;
   }
 
+  @Transactional
   @DeleteMapping("{id}")
   void deleteUserById(@PathVariable Long id) {
     userRepository.deleteById(id);
   }
 
+  @Transactional
   @GetMapping("/{id}/favourites")
   Resources<Set<Product>> getUserFavouriteProducts(@PathVariable Long id) {
     User actual_user = userRepository.findById(id).orElseThrow(
@@ -273,6 +282,7 @@ class UserController {
     return (criteria[0] > 0 && criteria[1] > 0 && criteria[2] > 0);
   }
 
+  @Transactional
   @GetMapping("/ratedProducts")
   public Resources<Resource<Product>> getRatedProducts(@RequestHeader("token") String token){
     User user = userRepository.findByToken(token).orElseThrow(
@@ -289,6 +299,7 @@ class UserController {
     return new Resources<>(productsRatedResource);
   }
 
+  @Transactional
   @GetMapping("/favouriteRecipes")
   public Resources<Resource<Recipe>> getFavouriteRecipes(@RequestHeader("token") String token) {
     User user = userRepository.findByToken(token).orElseThrow(
@@ -306,6 +317,7 @@ class UserController {
     return new Resources<>(favRecipesResource);
   }
 
+  @Transactional
   @PutMapping("/{id}/redeemPoints")
   void redeemPoints(@RequestHeader("token") String token, @PathVariable("id") Long id) {
     User user = userRepository.findById(id).orElseThrow(() -> new GenericException(HttpStatus.BAD_REQUEST, ExceptionMessages.USER_NOT_FOUND.getErrorMessage()  + id));

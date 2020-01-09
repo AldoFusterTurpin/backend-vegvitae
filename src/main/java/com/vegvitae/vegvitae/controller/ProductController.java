@@ -72,6 +72,7 @@ public class ProductController {
   @Autowired
   private RatingProductRepository ratingProductRepository;
 
+  @Transactional
   @PostMapping(produces = "application/hal+json")
   public Resource<Product> newProduct(@Valid @RequestBody newProductDTO productDTO,
       @RequestHeader("token") String token) {
@@ -170,6 +171,7 @@ public class ProductController {
         linkTo(methodOn(ProductController.class).getAllProducts(orderBy, userId)).withSelfRel());
   }
 
+  @Transactional
   @GetMapping("/{id}")
   Resource<Product> getProductByBarcode(@PathVariable Long id) {
 
@@ -243,31 +245,37 @@ public class ProductController {
     return new Resources<>(getAllLinksResourcesWithAllLinks(resourceProducts));
   }
 
+  @Transactional
   @GetMapping("/additionalEnum")
   ProductAdditionalTypeEnum[] getAdditionalEnums() {
     return ProductAdditionalTypeEnum.values();
   }
 
+  @Transactional
   @GetMapping("/baseEnum")
   ProductBaseTypeEnum[] getBaseEnums() {
     return ProductBaseTypeEnum.values();
   }
 
+  @Transactional
   @GetMapping("/supermarketEnum")
   SupermarketEnum[] getSupermarketEnums() {
     return SupermarketEnum.values();
   }
 
+  @Transactional
   @GetMapping("/orderEnum")
   OrderTypeEnum[] getOrderEnums() {
     return OrderTypeEnum.values();
   }
 
+  @Transactional
   @DeleteMapping("{id}")
   void deleteProductById(@PathVariable Long id) {
     //no s'implementa
   }
 
+  @Transactional
   @PutMapping("/{id_product}/favourites")
   void addProductToFavourites(@PathVariable Long id_product, @RequestHeader("token") String token) {
     Product favouriteProd = productRepository.findById(id_product).orElseThrow(
@@ -282,6 +290,7 @@ public class ProductController {
     userRepository.save(user);
   }
 
+  @Transactional
   @DeleteMapping("/{id_product}/favourites")
   void deleteProductFromFavourites(@PathVariable Long id_product,
       @RequestHeader("token") String token) {
@@ -416,6 +425,7 @@ public class ProductController {
     return new Resource<Product>(product, selfLink);
   }
 
+  @Transactional
   @PutMapping("{barcode}/image")
   void uploadProductImage(@PathVariable Long barcode,
       @RequestParam("image") MultipartFile image) throws IOException {
@@ -426,6 +436,7 @@ public class ProductController {
     productRepository.save(product);
   }
 
+  @Transactional
   @GetMapping("{barcode}/image")
   ResponseEntity<byte[]> getProductImage(@PathVariable Long barcode) {
     Product product = productRepository.findById(barcode)
@@ -466,6 +477,7 @@ public class ProductController {
     }
   }
 
+  @Transactional
   @PostMapping("{barcode}/report")
   void reportProduct(@RequestHeader("token") String token, @PathVariable Long barcode) {
     Optional<Product> productOpt = productRepository.findById(barcode);

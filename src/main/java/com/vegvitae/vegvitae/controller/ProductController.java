@@ -326,6 +326,7 @@ public class ProductController {
             .withRel("productsOrderDateDesc"));
   }
 
+  @Transactional
   @GetMapping("/{productId}/rating")
   public Resource<Map<String, Double>> getProductRating(@PathVariable Long productId) {
     if (!productRepository.existsById(productId)) {
@@ -341,6 +342,7 @@ public class ProductController {
     return new Resource<Map<String, Double>>(body, selfLink);
   }
 
+  @Transactional
   @GetMapping("/{productId}/userRating")
   public Resource<Map<String, Double>> getUserRating(@PathVariable Long productId,
       @RequestHeader("token") String token) {
@@ -366,6 +368,7 @@ public class ProductController {
     return new Resource<Map<String, Double>>(body, selfLink);
   }
 
+  @Transactional
   @PutMapping("/{productId}/rating")
   public Resource<Product> addRating(@PathVariable Long productId,
       @RequestHeader("token") String token,

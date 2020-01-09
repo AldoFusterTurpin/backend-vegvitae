@@ -40,7 +40,7 @@ public class ProductTest extends AbstractTest {
     List<String> socialMediaLinks = new ArrayList<String>();
     socialMediaLinks.add("www.youtube.com");
     socialMediaLinks.add("www.facebook.com");
-    User user = new User("test", "TEst1234", "test@test.com", "I'm just a user test",
+    User user = new User("testProducts", "TEst1234", "testProducts@test.com", "I'm just a user test",
         socialMediaLinks);
     String inputJson = super.mapToJson(user);
     MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.post(localUri).contentType(

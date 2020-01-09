@@ -57,13 +57,13 @@ public class User {
 
   @JsonIgnore
   @Column(name = "favourite_products")
-  @ManyToMany(cascade = CascadeType.ALL)
+  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(name = "user_favourite_products", joinColumns = @JoinColumn(name = "userId"), inverseJoinColumns = @JoinColumn(name = "productBarcode"))
   private Set<Product> favouriteProducts;
 
   @JsonIgnore
   @Column(name = "favourite_recipe")
-  @ManyToMany(cascade = CascadeType.ALL)
+  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(name = "user_favourite_recipe", joinColumns = @JoinColumn(name = "userId"), inverseJoinColumns = @JoinColumn(name = "recipeId"))
   private Set<Recipe> favouriteRecipes;
 

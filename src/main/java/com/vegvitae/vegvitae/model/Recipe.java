@@ -77,8 +77,8 @@ public class Recipe {
   @NotNull
   private String process;
 
-  @ElementCollection
-  @ManyToMany
+  @ManyToMany(cascade = CascadeType.ALL)
+  @JoinTable(name = "userProducts", joinColumns = @JoinColumn(name = "recipeId"), inverseJoinColumns = @JoinColumn(name = "productBarcode"))
   private Set<Product> usedProducts;
 
   /*

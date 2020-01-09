@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface RecipeRepository extends JpaRepository<Recipe, Long> {
 
-  Set<Recipe> findRecipeByTitleContaining(String title);
+  Set<Recipe> findRecipeByTitleIgnoreCaseContaining(String title);
 
   Set<Recipe> findRecipeByUsedProducts(Product p);
 }

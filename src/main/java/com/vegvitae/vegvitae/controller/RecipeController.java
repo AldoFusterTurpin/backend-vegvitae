@@ -255,7 +255,7 @@ public class RecipeController {
     List<Resource<Recipe>> recipeResources = new ArrayList<>();
     Set<Recipe> recipes = new HashSet<>();
     if (title != null && idProduct != null){
-      recipes = recipeRepository.findRecipeByTitleContaining(title);
+      recipes = recipeRepository.findRecipeByTitleIgnoreCaseContaining(title);
       Product actualProduct = productRepository.findById(idProduct).orElseThrow(
           () -> new GenericException(HttpStatus.NOT_FOUND,
               ExceptionMessages.PRODUCT_NOT_FOUND.getErrorMessage()));
@@ -271,7 +271,7 @@ public class RecipeController {
       recipes = recipeRepository.findRecipeByUsedProducts(actualProduct);
     }
     if (title != null){
-      recipes = recipeRepository.findRecipeByTitleContaining(title);
+      recipes = recipeRepository.findRecipeByTitleIgnoreCaseContaining(title);
     }
 
     for (Recipe next : recipes){

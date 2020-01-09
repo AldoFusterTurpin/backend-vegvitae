@@ -196,7 +196,7 @@ public class ProductController {
     if (name != null) {
       Set<Product> setProducts = new HashSet<>();
       for (String n : name) {
-        setProducts.addAll(productRepository.findByNameContaining(n));
+        setProducts.addAll(productRepository.findByNameIgnoreCaseContaining(n));
       }
       products.addAll(setProducts);
     }
@@ -224,7 +224,7 @@ public class ProductController {
     if (shop != null) {
       Set<Product> setProducts = new HashSet<>();
       for (String n : shop) {
-        setProducts.addAll(productRepository.findByShopContaining(n));
+        setProducts.addAll(productRepository.findByShopIgnoreCaseContaining(n));
       }
       if (products.isEmpty()) {
         products.addAll(setProducts);

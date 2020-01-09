@@ -15,9 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-  Set<Product> findByShopContaining(String shop);
+  Set<Product> findByShopIgnoreCaseContaining(String shop);
 
-  Set<Product> findByNameContaining(String name);
+  Set<Product> findByNameIgnoreCaseContaining(String name);
 
   List<Product> findByBaseTypeIn(List<ProductBaseTypeEnum> baseTypes);
 

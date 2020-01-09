@@ -67,7 +67,7 @@ public class User {
   @JoinTable(name = "user_favourite_recipe", joinColumns = @JoinColumn(name = "userId"), inverseJoinColumns = @JoinColumn(name = "recipeId"))
   private Set<Recipe> favouriteRecipes;
 
-  User() {
+  public User() {
   }
 
   public User(String username, String password, String email, String personalDescription,

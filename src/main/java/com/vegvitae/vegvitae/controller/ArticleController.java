@@ -13,6 +13,7 @@ import org.checkerframework.common.util.report.qual.ReportUnqualified;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.convert.ClassGeneratingEntityInstantiator;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +36,7 @@ public class ArticleController {
   @Autowired
   UserRepository userRepository;
 
+  @Transactional
   @PostMapping
   Article createArticle(@Valid @RequestBody Article article, @RequestHeader("token") String token) {
     article.setUploader(userRepository.findByToken(token).orElseThrow(
@@ -44,11 +46,13 @@ public class ArticleController {
     return articleRepository.save(article);
   }
 
+  @Transactional
   @GetMapping
   List<Article> getAllArticles() {
     return articleRepository.findAll();
   }
 
+  @Transactional
   @PutMapping("/{id}")
   Article editArticle(@Valid @RequestBody Article newArticle, @PathVariable Long id,
       @RequestHeader("token") String token) {
@@ -68,6 +72,7 @@ public class ArticleController {
     return articleRepository.save(article);
   }
 
+  @Transactional
   @DeleteMapping("/{id}")
   void deleteArticle(@PathVariable Long id, @RequestHeader("token") String token) {
     Article article = articleRepository.findById(id).orElseThrow(

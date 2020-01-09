@@ -16,6 +16,7 @@ import java.util.Set;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,6 +47,7 @@ public class RecipeCommentController {
   @Autowired
   RecipeCommentRepository recipeCommentRepository;
 
+  @Transactional
   @PostMapping
   RecipeComment createRecipeComment(@PathVariable Long recipeId,
       @Valid @RequestBody RecipeComment comment, @RequestHeader("token") String token) {
@@ -75,6 +77,7 @@ public class RecipeCommentController {
     }
   }
 
+  @Transactional
   @GetMapping
   List<RecipeComment> getRecipeComments(@PathVariable Long recipeId) {
     Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
@@ -87,6 +90,7 @@ public class RecipeCommentController {
     }
   }
 
+  @Transactional
   @PutMapping("/{id}")
   RecipeComment editRecipeComment(@PathVariable Long recipeId, @PathVariable Long id,
       @Valid @RequestBody RecipeComment commentNew, @RequestHeader("token") String token) {
@@ -120,6 +124,7 @@ public class RecipeCommentController {
     }
   }
 
+  @Transactional
   @ResponseStatus(value = HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
   void deleteRecipeComment(@PathVariable Long recipeId, @PathVariable Long id, @RequestHeader("token") String token) {
@@ -150,6 +155,7 @@ public class RecipeCommentController {
     }
   }
 
+  @Transactional
   @PostMapping("/{id}/vote")
   RecipeComment voteRecipeComment(@PathVariable Long recipeId, @PathVariable Long id,
       @RequestHeader("token") String token) {
@@ -186,6 +192,7 @@ public class RecipeCommentController {
     }
   }
 
+  @Transactional
   @DeleteMapping("/{id}/vote")
   RecipeComment unvoteRecipeComment(@PathVariable Long recipeId, @PathVariable Long id,
       @RequestHeader("token") String token) {

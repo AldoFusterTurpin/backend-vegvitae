@@ -57,7 +57,8 @@ public class RecipeController {
   @Autowired
   private UploadedFileRepository uploadedFileRepository;
 
-  @PostMapping()
+  @Transactional
+  @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public Resource<Recipe> newRecipe(@Valid @RequestBody Recipe newRecipe,
       @RequestHeader("token") String token) {
@@ -109,6 +110,7 @@ public class RecipeController {
     }
   }
 
+  @Transactional
   @PutMapping("{id}/pictures")
   public void addRecipeImages(@PathVariable Long id, @RequestParam("files") MultipartFile file)
       throws IOException {
@@ -126,6 +128,7 @@ public class RecipeController {
     recipeRepository.save(actualRecipe);
   }
 
+  @Transactional
   @PutMapping("{id_recipe}/addProduct/{id_product}")
   public void addProductToARecipe(@PathVariable Long id_recipe, @PathVariable Long id_product) {
     Product productToAdd = productRepository.findById(id_product).orElseThrow(
@@ -145,6 +148,7 @@ public class RecipeController {
     recipeRepository.save(actualRecipe);
   }
 
+  @Transactional
   @GetMapping("{id_recipe}/products")
   public Resources<Resource<Product>> getRecipeProducts(@PathVariable Long id_recipe) {
     Recipe recipe = recipeRepository.findById(id_recipe).orElseThrow(
@@ -165,6 +169,7 @@ public class RecipeController {
         linkTo(methodOn(RecipeController.class).getRecipeImages(id_recipe)).withSelfRel());
   }
 
+  @Transactional
   @PostMapping("{recipeId}/report")
   void reportProduct(@RequestHeader("token") String token, @PathVariable Long recipeId) {
     Optional<Recipe> recipeOpt = recipeRepository.findById(recipeId);
@@ -191,6 +196,7 @@ public class RecipeController {
     }
   }
 
+  @Transactional
   @PutMapping("{id}/favourites")
   @ResponseStatus(HttpStatus.OK)
   void addRecipeToFavourite(@RequestHeader("token") String token, @PathVariable Long id) {

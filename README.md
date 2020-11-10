@@ -3,7 +3,7 @@
 This is the repository for the backend for PES application VegVitae. It implements a REST API using Java, Spring Boot and JavaPersistence/Hibernate.
 
 NOTE:
-The Springboot API depends on $MY_DB_URL and $MY_DB_PASSWORD environment variables to run properly, the below scripts already set them correctly this is done
+The Springboot API depends on $MY_DB_URL and $MY_DB_PASSWORD environment variables to run properly, the below scripts already set them correctly. This is done
 to avoid hardcoding credentials (for the deployment of the app)
 
 NOTE: execute
@@ -31,8 +31,6 @@ IMPORTANT: this will erase all your containers and volumes
    $ source clean_all_containers.sh
 ```
 
-_------------------------------------------------------------------------------------------------
-
 EXECUTE THE APP (method 2)
 Execute the following command to launch the application natively without Docker, you will need to set Postgres DB Manually.
 1) run the script set_env_dev_without_docker.sh, it will set some environment variables:
@@ -41,7 +39,7 @@ Execute the following command to launch the application natively without Docker,
 ```
 
 Backend is made by:
-  * Aldo
+  * Aldo Fuster Turpin
   * Aaron
   * Marc
   * Ruben
